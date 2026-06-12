@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ashu's Dashboard</title>
+<title>Study & Research Dashboard</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -106,7 +106,7 @@
 <div class="container">
   <header>
     <div>
-      <h1>Ashu's Dashboard</h1>
+      <h1>Study Dashboard</h1>
       <div class="sub" id="today-str"></div>
     </div>
     <div class="header-right">
@@ -140,14 +140,14 @@ const HORIZONS = [
 
 // Seeded from Google Calendar (submission / deadline / exam keywords). Overwritten live on sync.
 let deadlines = [
-  { title: 'Exam Registration', date: '2026-06-30', type: 'deadline' },
-  { title: 'Deutschlandstipendium', date: '2026-06-30', type: 'deadline' },
-  { title: 'ESMIA Written Submission', date: '2026-06-30', type: 'submission' },
-  { title: 'Plant Hydraulics', date: '2026-07-24', type: 'exam' },
-  { title: 'Luftqualität und Luftreinhaltung', date: '2026-08-04', type: 'exam' },
-  { title: 'Energy Efficiency in Production Eng.', date: '2026-08-05', type: 'exam' },
-  { title: 'Production Eng. of Sustainable Materials', date: '2026-08-07', type: 'exam' },
-  { title: 'ESMIA', date: '2026-08-11', type: 'exam' },
+  { title: 'Semester Registration', date: '2026-06-30', type: 'deadline' },
+  { title: 'Scholarship Application', date: '2026-06-30', type: 'deadline' },
+  { title: 'Course Project Submission', date: '2026-06-30', type: 'submission' },
+  { title: 'Fluid Dynamics Exam', date: '2026-07-24', type: 'exam' },
+  { title: 'Environmental Chemistry Exam', date: '2026-08-04', type: 'exam' },
+  { title: 'Sustainable Energy Exam', date: '2026-08-05', type: 'exam' },
+  { title: 'Materials Science Exam', date: '2026-08-07', type: 'exam' },
+  { title: 'Energy Economics Exam', date: '2026-08-11', type: 'exam' },
 ];
 
 const defaultTasks = {
@@ -166,8 +166,8 @@ const defaultTasks = {
 };
 
 const HIWIS = [
-  { id: 'tubs', name: 'TU Braunschweig', loc: 'TUBS HiWi' },
-  { id: 'tub', name: 'TU Berlin', loc: 'TUB HiWi · remote' },
+  { id: 'tubs', name: 'University A', loc: 'Lab Assistant' },
+  { id: 'tub', name: 'University B', loc: 'Research Assistant · remote' },
 ];
 
 let tasks = loadTasks();

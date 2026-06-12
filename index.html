@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ashu's Dashboard</title>
+<title>Study & Research Dashboard</title>
 <!-- Google Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -816,7 +816,7 @@
 
   <header>
     <div>
-      <h1>Ashu's Dashboard</h1>
+      <h1>Study Dashboard</h1>
       <div class="sub" id="today-str"></div>
     </div>
     <div class="header-right">
@@ -845,12 +845,12 @@
 
   <!-- HiWi Tasks Section -->
   <div class="section-title">
-    <span>HiWi Workspace</span>
+    <span>Work & Research Labs</span>
   </div>
   <div class="hiwis" id="hiwis"></div>
 
   <footer>
-    Ashu's Dashboard · Cloud data securely saved inside your private Google Drive App Folder.
+    Study Dashboard · Cloud data securely saved inside your private Google Drive App Folder.
   </footer>
 </div>
 
@@ -949,8 +949,8 @@ const HORIZONS = [
 ];
 
 const HIWIS = [
-  { id: 'tubs', name: 'TU Braunschweig', loc: 'TUBS HiWi' },
-  { id: 'tub', name: 'TU Berlin', loc: 'TUB HiWi · remote' },
+  { id: 'tubs', name: 'University A', loc: 'Lab Assistant' },
+  { id: 'tub', name: 'University B', loc: 'Research Assistant · remote' },
 ];
 
 const defaultTasks = {
@@ -1012,10 +1012,10 @@ async function loadInitialData() {
   if (!deadlines.length) {
     // Seed default deadlines if nothing cached
     deadlines = [
-      { title: 'Exam Registration', date: '2026-06-30', type: 'deadline' },
-      { title: 'Deutschlandstipendium', date: '2026-06-30', type: 'deadline' },
-      { title: 'ESMIA Written Submission', date: '2026-06-30', type: 'submission' },
-      { title: 'Plant Hydraulics', date: '2026-07-24', type: 'exam' }
+      { title: 'Semester Registration', date: '2026-06-30', type: 'deadline' },
+      { title: 'Scholarship Application', date: '2026-06-30', type: 'deadline' },
+      { title: 'Course Project Submission', date: '2026-06-30', type: 'submission' },
+      { title: 'Fluid Dynamics Exam', date: '2026-07-24', type: 'exam' }
     ];
   }
   
@@ -1470,7 +1470,7 @@ async function submitBlockTime() {
     // Construct request payload
     const eventPayload = {
       summary: title,
-      description: `Focus Block scheduled via Ashu's Dashboard for the deadline: ${document.getElementById('block-deadline-title').value}`,
+      description: `Focus Block scheduled via Study Dashboard for the deadline: ${document.getElementById('block-deadline-title').value}`,
       start: {
         dateTime: `${dateStr}T${start}:00`,
         timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone

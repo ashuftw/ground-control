@@ -1,4 +1,4 @@
-# Ashu's Productivity Dashboard
+# Study & Research Dashboard
 
 A secure, private, and lightweight productivity dashboard for managing university tasks, deadlines, and schedule focus blocks.
 
@@ -53,7 +53,7 @@ To connect Google Calendar & Google Drive, you need to create your own free OAut
 ### Step 1: Create a Google Cloud Project
 1. Open the [Google Cloud Console](https://console.cloud.google.com/).
 2. Click the project dropdown in the top-left corner and click **New Project**.
-3. Name it `Ashu Dashboard` and click **Create**.
+3. Name it `Study Dashboard` and click **Create**.
 
 ### Step 2: Enable APIs
 You need to enable access to Google Calendar and Google Drive for this project:
@@ -64,7 +64,7 @@ You need to enable access to Google Calendar and Google Drive for this project:
 1. Go to **APIs & Services** &rarr; **OAuth consent screen** in the sidebar.
 2. Select **External** as the user type and click **Create**.
 3. Fill in the basic application info:
-   * **App name**: `Ashu Dashboard`
+   * **App name**: `Study Dashboard`
    * **User support email**: *Your Gmail address*
    * **Developer contact information**: *Your Gmail address*
 4. Click **Save and Continue**.
@@ -132,7 +132,7 @@ Clicking **Sync Calendar** searches your Google Calendar events for the next 30 
 Click **Block time** next to any deadline. A scheduler modal will open. You can edit the focus block name, set the date (defaults to the day before), select your start/end times, and click **Schedule on Google**. The app will create a 2-hour event directly in your Google Calendar.
 
 ### 📝 Horizontal Task Boards
-Manage tasks for **TU Braunschweig** and **TU Berlin** across four status horizons:
+Manage tasks for **University A** and **University B** across four status horizons:
 * **Today**
 * **Next up**
 * **Pending**
@@ -145,5 +145,5 @@ Manage tasks for **TU Braunschweig** and **TU Berlin** across four status horizo
 If you want Claude (e.g. Claude Desktop) to read your tasks and help check things off, we can create a companion **MCP (Model Context Protocol) Server** in this directory. 
 
 Claude can load this server locally via stdin/stdout, read the `tasks.json` file synced to your local machine, and let you complete tasks directly from your chat prompt:
-> *"Claude, what are my tasks for TU Berlin today?"*
+> *"Claude, what are my tasks for University B today?"*
 > *"Claude, I finished documenting and running the code, check it off."*
