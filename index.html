@@ -800,10 +800,192 @@
     color: var(--primary);
     text-decoration: none;
   }
+
+  /* Landing / Login Page */
+  .login-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 4rem);
+    text-align: center;
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+  
+  .login-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 3rem 2rem;
+    box-shadow: var(--shadow-lg);
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .login-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(135deg, var(--primary) 0%, #d946ef 100%);
+  }
+
+  .login-logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border-radius: var(--radius-md);
+    background: var(--primary-light);
+    color: var(--primary);
+    margin-bottom: 1.5rem;
+  }
+  
+  .login-logo svg {
+    width: 32px;
+    height: 32px;
+  }
+
+  .login-title {
+    font-family: var(--font-heading);
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.75rem;
+    background: linear-gradient(135deg, var(--primary) 0%, #d946ef 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .login-desc {
+    color: var(--text-sec);
+    font-size: 0.95rem;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+  }
+
+  .login-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+  }
+
+  .btn-google {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    background: #fff;
+    color: #3c4043;
+    border: 1px solid #dadce0;
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1.5rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--font-body);
+    transition: all 0.2s;
+    box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+  }
+
+  .btn-google:hover {
+    background: #f8f9fa;
+    border-color: #d2e3fc;
+    box-shadow: 0 1px 3px 0 rgba(60,64,67,0.3), 0 4px 8px 3px rgba(60,64,67,0.15);
+  }
+  
+  @media (prefers-color-scheme: dark) {
+    .btn-google {
+      background: #13151a;
+      color: #e8eaed;
+      border-color: #3c4043;
+    }
+    .btn-google:hover {
+      background: #202124;
+      border-color: #5f6368;
+    }
+  }
+
+  .btn-offline {
+    background: transparent;
+    color: var(--text-sec);
+    border: 1px solid var(--border);
+  }
+
+  .btn-offline:hover {
+    background: var(--bg-hover);
+    color: var(--text);
+  }
+
+  /* User Info Widget */
+  .user-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+
+  .user-avatar {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--primary-light);
+  }
+  
+  .btn-logout {
+    color: var(--danger);
+    background: transparent;
+    border: 1px solid transparent;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s;
+  }
+  
+  .btn-logout:hover {
+    background: var(--danger-light);
+    color: var(--danger-text);
+  }
 </style>
 </head>
 <body>
-<div class="container">
+<!-- Login Screen (Visible when not authenticated and not in offline/local mode) -->
+<div class="login-container" id="login-container" style="display: none;">
+  <div class="login-card">
+    <div class="login-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
+    <h2 class="login-title">Study Dashboard</h2>
+    <p class="login-desc">Manage university tasks, track deadlines, and schedule focus blocks. Securely syncs with your Google Account.</p>
+    <div class="login-buttons">
+      <button class="btn-google" onclick="handleAuthClick()">
+        <svg style="width:18px;height:18px;" viewBox="0 0 24 24"><path fill="#EA4335" d="M5.266 9.765A7.077 7.077 0 0 1 12 4.909c1.69 0 3.218.6 4.418 1.582l3.51-3.51C17.842 1.05 15.114 0 12 0 7.354 0 3.393 2.665 1.488 6.559l3.778 3.206z"/><path fill="#4285F4" d="M23.49 12.275c0-.825-.074-1.62-.21-2.385H12v4.51h6.44c-.277 1.463-1.1 2.703-2.337 3.535l3.63 2.818c2.128-1.96 3.757-4.84 3.757-8.478z"/><path fill="#FBBC05" d="M5.266 14.235A7.082 7.082 0 0 1 4.91 12c0-.79.13-1.554.356-2.265L1.488 6.53A11.948 11.948 0 0 0 0 12c0 2.015.5 3.914 1.39 5.597l3.876-3.362z"/><path fill="#34A853" d="M12 24c3.24 0 5.957-1.075 7.942-2.912l-3.63-2.818c-1.006.674-2.295 1.075-4.312 1.075-3.34 0-6.177-2.253-7.186-5.285L.94 17.425C2.857 21.328 6.89 24 12 24z"/></svg>
+        Sign In with Google
+      </button>
+      <button class="btn btn-offline" onclick="enterLocalMode()">
+        Use Offline (Local Mode)
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Main Dashboard Container -->
+<div class="container" id="dashboard-container" style="display: none;">
   
   <!-- Connection Prompt Banner -->
   <div class="banner" id="connect-banner" style="display: none;">
@@ -820,6 +1002,13 @@
       <div class="sub" id="today-str"></div>
     </div>
     <div class="header-right">
+      <div id="user-widget" style="display: none; align-items: center; gap: 0.5rem;">
+        <div class="user-badge">
+          <img class="user-avatar" id="user-avatar" src="" alt="User Avatar" />
+          <span id="user-name">User</span>
+        </div>
+        <button class="btn-logout" onclick="handleLogout()">Log Out</button>
+      </div>
       <div class="sync-state local" id="sync">
         <span class="dot"></span>
         <span id="sync-txt">Local mode</span>
@@ -1018,14 +1207,17 @@ async function loadInitialData() {
       { title: 'Fluid Dynamics Exam', date: '2026-07-24', type: 'exam' }
     ];
   }
-  
   renderAll();
   
-  if (clientId) {
+  const hasToken = localStorage.getItem('gcal_access_token') && localStorage.getItem('gcal_token_expiry') && Date.now() < parseInt(localStorage.getItem('gcal_token_expiry'));
+  const isOfflineMode = sessionStorage.getItem('offline_mode') === 'true';
+
+  if (hasToken && clientId) {
     checkAuth();
+  } else if (isOfflineMode) {
+    enterLocalMode();
   } else {
-    showSyncState('local', 'Local mode');
-    document.getElementById('connect-banner').style.display = 'flex';
+    showLandingPage();
   }
 }
 
@@ -1230,14 +1422,18 @@ function closeBlockModal() {
 /* Google API OAuth Integration */
 function initGis() {
   if (!clientId) {
-    showSyncState('local', 'Local mode');
+    if (sessionStorage.getItem('offline_mode') === 'true') {
+      enterLocalMode();
+    } else {
+      showLandingPage();
+    }
     return;
   }
   
   try {
     tokenClient = google.accounts.oauth2.initTokenClient({
       client_id: clientId,
-      scope: 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/drive.appdata',
+      scope: 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.profile',
       callback: async (tokenResponse) => {
         if (tokenResponse.error !== undefined) {
           showSyncState('error', 'Auth error');
@@ -1268,15 +1464,17 @@ function checkAuth() {
   const expiry = localStorage.getItem('gcal_token_expiry');
   if (token && expiry && Date.now() < parseInt(expiry)) {
     accessToken = token;
-    document.getElementById('connect-banner').style.display = 'none';
     onAuthSuccess();
   } else {
     // Attempt silent login
     try {
       tokenClient.requestAccessToken({ prompt: 'none' });
     } catch(e) {
-      showSyncState('local', 'Local mode');
-      document.getElementById('connect-banner').style.display = 'flex';
+      if (sessionStorage.getItem('offline_mode') === 'true') {
+        enterLocalMode();
+      } else {
+        showLandingPage();
+      }
     }
   }
 }
@@ -1290,6 +1488,13 @@ function handleAuthClick() {
 }
 
 async function onAuthSuccess() {
+  sessionStorage.removeItem('offline_mode');
+  document.getElementById('login-container').style.display = 'none';
+  document.getElementById('dashboard-container').style.display = 'block';
+  document.getElementById('connect-banner').style.display = 'none';
+  
+  fetchUserProfile();
+
   showSyncState('syncing', 'Syncing Google Drive...');
   try {
     await fetchGoogleDriveTasks();
@@ -1298,6 +1503,72 @@ async function onAuthSuccess() {
     console.error(e);
     showSyncState('error', 'Drive sync error');
     showToast('Could not load tasks from Google Drive.', 'warning');
+  }
+}
+
+function enterLocalMode() {
+  sessionStorage.setItem('offline_mode', 'true');
+  document.getElementById('login-container').style.display = 'none';
+  document.getElementById('dashboard-container').style.display = 'block';
+  document.getElementById('user-widget').style.display = 'none';
+  document.getElementById('sync').style.display = 'flex';
+  showSyncState('local', 'Local mode');
+  document.getElementById('connect-banner').style.display = 'flex';
+}
+
+function showLandingPage() {
+  document.getElementById('login-container').style.display = 'flex';
+  document.getElementById('dashboard-container').style.display = 'none';
+}
+
+function handleLogout() {
+  accessToken = null;
+  googleFileId = null;
+  localStorage.removeItem('gcal_access_token');
+  localStorage.removeItem('gcal_token_expiry');
+  localStorage.removeItem('cached_deadlines');
+  localStorage.removeItem('google_user_profile');
+  
+  // Clear tasks on logout to maintain privacy
+  localStorage.removeItem(STORAGE_KEY);
+  tasks = JSON.parse(JSON.stringify(defaultTasks));
+  
+  renderAll();
+  showLandingPage();
+  showToast('Logged out successfully!', 'success');
+}
+
+async function fetchUserProfile() {
+  if (!accessToken) return;
+  try {
+    const cachedProfile = localStorage.getItem('google_user_profile');
+    if (cachedProfile) {
+      displayUserProfile(JSON.parse(cachedProfile));
+      return;
+    }
+    
+    const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { 'Authorization': `Bearer ${accessToken}` }
+    });
+    if (res.ok) {
+      const profile = await res.json();
+      localStorage.setItem('google_user_profile', JSON.stringify(profile));
+      displayUserProfile(profile);
+    }
+  } catch (e) {
+    console.error('Failed to fetch user profile:', e);
+  }
+}
+
+function displayUserProfile(profile) {
+  const userWidget = document.getElementById('user-widget');
+  const avatarEl = document.getElementById('user-avatar');
+  const nameEl = document.getElementById('user-name');
+  
+  if (userWidget && avatarEl && nameEl) {
+    avatarEl.src = profile.picture || '';
+    nameEl.textContent = profile.name || 'User';
+    userWidget.style.display = 'flex';
   }
 }
 
