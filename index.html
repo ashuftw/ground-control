@@ -991,7 +991,7 @@
   <div class="banner" id="connect-banner" style="display: none;">
     <div class="banner-text">
       <svg class="icon" viewBox="0 0 24 24"><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10zM2 12h20M20.5 5A17 17 0 0 0 18 12a17 17 0 0 0 2.5 7M3.5 5A17 17 0 0 1 6 12a17 17 0 0 1-2.5 7"/></svg>
-      <span>Sync tasks across devices and load deadlines from Google Calendar</span>
+      <span>Sync tasks and deadlines securely in the cloud across your devices</span>
     </div>
     <button class="banner-btn" onclick="handleAuthClick()">Connect Google Account</button>
   </div>
@@ -1013,10 +1013,6 @@
         <span class="dot"></span>
         <span id="sync-txt">Local mode</span>
       </div>
-      <button class="btn" id="sync-btn" onclick="syncCalendarEvents()">
-        <svg class="icon" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-.5 4"/><path d="M20 5v6h-6"/></svg>
-        Sync Calendar
-      </button>
       <button class="btn" onclick="openSettings()" aria-label="Settings">
         <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       </button>
@@ -1029,6 +1025,7 @@
   <!-- Deadlines Section -->
   <div class="section-title">
     <span>Deadlines & Exams</span>
+    <button class="btn" id="add-deadline-btn" onclick="openAddDeadlineModal()" style="display: none; padding: 0.25rem 0.5rem; font-size: 0.75rem;">+ Add</button>
   </div>
   <div class="deadlines" id="deadlines"></div>
 
@@ -1052,22 +1049,21 @@
     </div>
     <div class="modal-body">
       <div class="form-group">
-        <label for="settings-client-id">Google OAuth Client ID</label>
-        <input type="text" id="settings-client-id" placeholder="xxxx-xxxx.apps.googleusercontent.com" />
-        <div id="settings-default-note" style="display: none; font-size: 0.75rem; color: var(--text-sec); margin-top: 0.35rem; line-height: 1.4;">
-          ℹ️ Using website's default Client ID. Clear this input to reset or enter your own to override.
-        </div>
+        <label for="settings-supabase-url">Supabase Project URL</label>
+        <input type="text" id="settings-supabase-url" placeholder="https://your-project.supabase.co" />
+      </div>
+      <div class="form-group">
+        <label for="settings-supabase-key">Supabase Anon Key</label>
+        <input type="password" id="settings-supabase-key" placeholder="eyJhbGciOi..." />
       </div>
       
       <div class="instruction-box">
-        <strong>How to get your Client ID:</strong>
+        <strong>How to set up your database:</strong>
         <ol>
-          <li>Open the <a href="https://console.cloud.google.com" target="_blank" rel="noopener">Google Cloud Console</a>.</li>
-          <li>Create a project and enable the <strong>Google Calendar API</strong> and <strong>Google Drive API</strong>.</li>
-          <li>Go to "OAuth Consent Screen", choose External, add your email under Test Users, and add scopes for <code>drive.appdata</code> and <code>calendar.events</code>.</li>
-          <li>Go to "Credentials", click "Create Credentials" &rarr; "OAuth client ID" (select "Web Application").</li>
-          <li>Add <code>http://localhost:8000</code> (or your current web URL) to the <strong>Authorized JavaScript origins</strong>.</li>
-          <li>Copy the Client ID and paste it here.</li>
+          <li>Create a free account at <a href="https://supabase.com" target="_blank" rel="noopener">supabase.com</a> and create a project.</li>
+          <li>Go to **Authentication** &rarr; **Providers** &rarr; **Google** and enable it. (You will need to paste Google Client ID/Secret there).</li>
+          <li>Go to **Project Settings** &rarr; **API** and copy your Project URL and Anon key. Paste them here.</li>
+          <li>Run the database SQL setup script in your Supabase SQL Editor to create the tables.</li>
         </ol>
       </div>
     </div>
@@ -1078,43 +1074,34 @@
   </div>
 </div>
 
-<!-- Block Time Modal -->
-<div class="modal-overlay" id="modal-block">
+<!-- Add Deadline Modal -->
+<div class="modal-overlay" id="modal-deadline">
   <div class="modal">
     <div class="modal-header">
-      <h3>Schedule Focus Block</h3>
-      <button class="modal-close" onclick="closeBlockModal()">&times;</button>
+      <h3>Add Deadline / Exam</h3>
+      <button class="modal-close" onclick="closeDeadlineModal()">&times;</button>
     </div>
     <div class="modal-body">
-      <input type="hidden" id="block-deadline-title" />
       <div class="form-group">
-        <label>Event Name</label>
-        <input type="text" id="block-event-title" />
+        <label for="deadline-title">Title</label>
+        <input type="text" id="deadline-title" placeholder="e.g. Fluid Dynamics Exam" />
       </div>
       <div class="form-group">
-        <label>Date</label>
-        <input type="date" id="block-date" />
-      </div>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
-        <div class="form-group">
-          <label>Start Time</label>
-          <input type="time" id="block-start" value="10:00" />
-        </div>
-        <div class="form-group">
-          <label>End Time</label>
-          <input type="time" id="block-end" value="12:00" />
-        </div>
+        <label for="deadline-date">Date</label>
+        <input type="date" id="deadline-date" />
       </div>
       <div class="form-group">
-        <label>Calendar ID</label>
-        <select id="block-calendar-id">
-          <option value="primary">Primary Calendar</option>
+        <label for="deadline-type">Type</label>
+        <select id="deadline-type">
+          <option value="deadline">Deadline</option>
+          <option value="submission">Submission</option>
+          <option value="exam">Exam</option>
         </select>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn" onclick="closeBlockModal()">Cancel</button>
-      <button class="btn btn-primary" id="block-submit-btn" onclick="submitBlockTime()">Schedule on Google</button>
+      <button class="btn" onclick="closeDeadlineModal()">Cancel</button>
+      <button class="btn btn-primary" id="deadline-submit-btn" onclick="submitDeadline()">Add Deadline</button>
     </div>
   </div>
 </div>
@@ -1122,8 +1109,8 @@
 <!-- Toast Container -->
 <div class="toast-container" id="toast-container"></div>
 
-<!-- Google API & GIS Scripts -->
-<script src="https://accounts.google.com/gsi/client" onload="initGis()" async defer></script>
+<!-- Supabase Client SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const STORAGE_KEY = 'hiwi-tasks-v1';
 const ICON_PLUS  = '<svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>';
@@ -1157,17 +1144,18 @@ const defaultTasks = {
   },
 };
 
-// CONFIGURATION: Set this to your Google OAuth Client ID to make this a public website!
-// Anyone visiting the site will be able to log in directly without setting up credentials.
-const DEFAULT_CLIENT_ID = ''; 
+// CONFIGURATION: Set these to your Supabase credentials!
+const SUPABASE_URL = ''; 
+const SUPABASE_ANON_KEY = '';
+
+let supabaseUrl = localStorage.getItem('supabase_url') || SUPABASE_URL;
+let supabaseAnonKey = localStorage.getItem('supabase_anon_key') || SUPABASE_ANON_KEY;
+const supabase = (supabaseUrl && supabaseAnonKey) ? supabase.createClient(supabaseUrl, supabaseAnonKey) : null;
 
 // State variables
 let tasks = JSON.parse(JSON.stringify(defaultTasks));
 let deadlines = [];
-let tokenClient;
-let accessToken = null;
-let googleFileId = null; // Google Drive tasks.json ID
-let clientId = localStorage.getItem('gcal_client_id') || DEFAULT_CLIENT_ID;
+let currentUser = null;
 
 // Initialize today's date
 document.getElementById('today-str').textContent =
@@ -1201,23 +1189,28 @@ async function loadInitialData() {
   if (!deadlines.length) {
     // Seed default deadlines if nothing cached
     deadlines = [
-      { title: 'Semester Registration', date: '2026-06-30', type: 'deadline' },
-      { title: 'Scholarship Application', date: '2026-06-30', type: 'deadline' },
-      { title: 'Course Project Submission', date: '2026-06-30', type: 'submission' },
-      { title: 'Fluid Dynamics Exam', date: '2026-07-24', type: 'exam' }
+      { id: 'd1', title: 'Semester Registration', date: '2026-06-30', type: 'deadline' },
+      { id: 'd2', title: 'Scholarship Application', date: '2026-06-30', type: 'deadline' },
+      { id: 'd3', title: 'Course Project Submission', date: '2026-06-30', type: 'submission' },
+      { id: 'd4', title: 'Fluid Dynamics Exam', date: '2026-07-24', type: 'exam' }
     ];
   }
   renderAll();
   
-  const hasToken = localStorage.getItem('gcal_access_token') && localStorage.getItem('gcal_token_expiry') && Date.now() < parseInt(localStorage.getItem('gcal_token_expiry'));
-  const isOfflineMode = sessionStorage.getItem('offline_mode') === 'true';
-
-  if (hasToken && clientId) {
-    checkAuth();
-  } else if (isOfflineMode) {
-    enterLocalMode();
+  if (supabase) {
+    supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session) {
+        currentUser = session.user;
+        await onLoginSuccess();
+      } else {
+        currentUser = null;
+        onLogoutSuccess();
+      }
+    });
   } else {
-    showLandingPage();
+    setTimeout(() => {
+      enterLocalMode();
+    }, 100);
   }
 }
 
@@ -1249,7 +1242,7 @@ function renderDeadlines() {
   const el = document.getElementById('deadlines');
   
   if (!sorted.length) {
-    el.innerHTML = '<div class="deadline"><div class="body"><div class="empty">No deadlines found. Sync your calendar to load.</div></div></div>';
+    el.innerHTML = '<div class="deadline"><div class="body"><div class="empty">No deadlines found. Click + Add to create one.</div></div></div>';
     return;
   }
   
@@ -1266,7 +1259,7 @@ function renderDeadlines() {
       <div class="body"><div class="t">${esc(d.title)}</div><div class="d">${dateFmt} · ${esc(d.type||'')}</div>
         <div class="bar"><span style="width:${pct}%"></span></div>
       </div>
-      <button class="btn" onclick="openBlockModal('${esc(d.title)}','${d.date}')">Block time</button>
+      <button class="btn btn-logout" onclick="deleteDeadline('${d.id}')" style="align-self: center; margin-left: auto; width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center;" title="Delete deadline">${ICON_X}</button>
     </div>`;
   }).join('');
 }
@@ -1325,13 +1318,35 @@ async function addTask(h){
   if(!tasks[h]) tasks[h] = {};
   if(!tasks[h][hz]) tasks[h][hz] = [];
   
-  tasks[h][hz].push({ id: 'k' + Math.random().toString(36).slice(2, 9), text, done: false });
+  const tempId = 'k' + Math.random().toString(36).slice(2, 9);
+  const newTask = { id: tempId, text, done: false };
+  tasks[h][hz].push(newTask);
   inp.value = '';
   renderAll();
   
-  // Save flow
-  saveTasksLocally();
-  await syncTasksToGoogleDrive();
+  if (currentUser) {
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert([{
+          user_id: currentUser.id,
+          hiwi_id: h,
+          horizon_id: hz,
+          text,
+          done: false
+        }])
+        .select();
+      if (!error && data && data.length > 0) {
+        newTask.id = data[0].id;
+        renderAll();
+      }
+    } catch(e) {
+      console.error(e);
+      showToast('Failed to save to cloud', 'warning');
+    }
+  } else {
+    saveTasksLocally();
+  }
 }
 
 async function toggleTask(h, hz, id){
@@ -1339,16 +1354,36 @@ async function toggleTask(h, hz, id){
   t.done = !t.done;
   renderAll();
   
-  saveTasksLocally();
-  await syncTasksToGoogleDrive();
+  if (currentUser) {
+    try {
+      await supabase
+        .from('tasks')
+        .update({ done: t.done })
+        .eq('id', id);
+    } catch(e) {
+      console.error(e);
+    }
+  } else {
+    saveTasksLocally();
+  }
 }
 
 async function delTask(h, hz, id){
   tasks[h][hz] = tasks[h][hz].filter(x=>x.id!==id);
   renderAll();
   
-  saveTasksLocally();
-  await syncTasksToGoogleDrive();
+  if (currentUser) {
+    try {
+      await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', id);
+    } catch(e) {
+      console.error(e);
+    }
+  } else {
+    saveTasksLocally();
+  }
 }
 
 function renderAll() {
@@ -1380,11 +1415,8 @@ function showSyncState(cls, txt) {
 
 /* Modals Management */
 function openSettings() {
-  document.getElementById('settings-client-id').value = localStorage.getItem('gcal_client_id') || '';
-  const noteEl = document.getElementById('settings-default-note');
-  if (noteEl) {
-    noteEl.style.display = DEFAULT_CLIENT_ID ? 'block' : 'none';
-  }
+  document.getElementById('settings-supabase-url').value = localStorage.getItem('supabase_url') || SUPABASE_URL;
+  document.getElementById('settings-supabase-key').value = localStorage.getItem('supabase_anon_key') || SUPABASE_ANON_KEY;
   document.getElementById('modal-settings').classList.add('open');
 }
 
@@ -1393,116 +1425,152 @@ function closeSettings() {
 }
 
 function saveSettings() {
-  const val = document.getElementById('settings-client-id').value.trim();
-  localStorage.setItem('gcal_client_id', val);
-  clientId = val || DEFAULT_CLIENT_ID;
+  const url = document.getElementById('settings-supabase-url').value.trim();
+  const key = document.getElementById('settings-supabase-key').value.trim();
+  
+  localStorage.setItem('supabase_url', url);
+  localStorage.setItem('supabase_anon_key', key);
+  
   closeSettings();
-  showToast('Settings saved!', 'success');
-  initGis();
+  showToast('Settings saved! Reloading...', 'success');
+  setTimeout(() => {
+    window.location.reload();
+  }, 1000);
 }
 
-// Scheduler Modal
-function openBlockModal(title, dateStr) {
-  document.getElementById('block-deadline-title').value = title;
-  document.getElementById('block-event-title').value = `Focus: Prep for ${title}`;
+// Deadline Modal
+function openAddDeadlineModal() {
+  document.getElementById('deadline-title').value = '';
+  document.getElementById('deadline-date').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('modal-deadline').classList.add('open');
+}
+
+function closeDeadlineModal() {
+  document.getElementById('modal-deadline').classList.remove('open');
+}
+
+async function submitDeadline() {
+  const title = document.getElementById('deadline-title').value.trim();
+  const dateStr = document.getElementById('deadline-date').value;
+  const type = document.getElementById('deadline-type').value;
   
-  // Pre-fill date to 1 day before deadline if possible, otherwise today
-  const dlDate = new Date(dateStr);
-  dlDate.setDate(dlDate.getDate() - 1);
-  const localDateStr = dlDate.toISOString().slice(0, 10);
-  document.getElementById('block-date').value = localDateStr;
-  
-  document.getElementById('modal-block').classList.add('open');
-}
-
-function closeBlockModal() {
-  document.getElementById('modal-block').classList.remove('open');
-}
-
-/* Google API OAuth Integration */
-function initGis() {
-  if (!clientId) {
-    if (sessionStorage.getItem('offline_mode') === 'true') {
-      enterLocalMode();
-    } else {
-      showLandingPage();
-    }
+  if (!title || !dateStr || !type) {
+    showToast('Please fill in all fields.', 'warning');
     return;
   }
   
-  try {
-    tokenClient = google.accounts.oauth2.initTokenClient({
-      client_id: clientId,
-      scope: 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.profile',
-      callback: async (tokenResponse) => {
-        if (tokenResponse.error !== undefined) {
-          showSyncState('error', 'Auth error');
-          showToast('Google authentication failed', 'danger');
-          console.error(tokenResponse);
-          return;
-        }
-        
-        accessToken = tokenResponse.access_token;
-        localStorage.setItem('gcal_access_token', accessToken);
-        localStorage.setItem('gcal_token_expiry', (Date.now() + tokenResponse.expires_in * 1000).toString());
-        
-        showToast('Connected to Google!', 'success');
-        document.getElementById('connect-banner').style.display = 'none';
-        
-        await onAuthSuccess();
-      },
-    });
-    checkAuth();
-  } catch (e) {
-    console.error('Error initializing Google Identity Services:', e);
-    showSyncState('error', 'SDK load failed');
-  }
-}
-
-function checkAuth() {
-  const token = localStorage.getItem('gcal_access_token');
-  const expiry = localStorage.getItem('gcal_token_expiry');
-  if (token && expiry && Date.now() < parseInt(expiry)) {
-    accessToken = token;
-    onAuthSuccess();
-  } else {
-    // Attempt silent login
+  const tempId = 'd' + Math.random().toString(36).slice(2, 9);
+  const newDeadline = { id: tempId, title, date: dateStr, type };
+  deadlines.push(newDeadline);
+  renderAll();
+  closeDeadlineModal();
+  
+  if (currentUser) {
     try {
-      tokenClient.requestAccessToken({ prompt: 'none' });
-    } catch(e) {
-      if (sessionStorage.getItem('offline_mode') === 'true') {
-        enterLocalMode();
-      } else {
-        showLandingPage();
+      const { data, error } = await supabase
+        .from('deadlines')
+        .insert([{
+          user_id: currentUser.id,
+          title,
+          date: dateStr,
+          type
+        }])
+        .select();
+      if (!error && data && data.length > 0) {
+        newDeadline.id = data[0].id;
+        renderAll();
       }
+    } catch(e) {
+      console.error(e);
+      showToast('Failed to save to cloud', 'warning');
     }
-  }
-}
-
-function handleAuthClick() {
-  if (tokenClient) {
-    tokenClient.requestAccessToken({ prompt: 'consent' });
   } else {
-    openSettings();
+    localStorage.setItem('cached_deadlines', JSON.stringify(deadlines));
   }
 }
 
-async function onAuthSuccess() {
+async function deleteDeadline(id) {
+  deadlines = deadlines.filter(d => d.id !== id);
+  renderAll();
+  
+  if (currentUser) {
+    try {
+      await supabase
+        .from('deadlines')
+        .delete()
+        .eq('id', id);
+    } catch(e) {
+      console.error(e);
+    }
+  } else {
+    localStorage.setItem('cached_deadlines', JSON.stringify(deadlines));
+  }
+  showToast('Deadline deleted!', 'success');
+}
+
+/* Supabase Auth Flows */
+async function handleAuthClick() {
+  if (!supabase) {
+    showToast('Please configure Supabase settings first!', 'warning');
+    openSettings();
+    return;
+  }
+  
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: window.location.origin + window.location.pathname
+    }
+  });
+  if (error) {
+    showToast('Google login failed: ' + error.message, 'danger');
+  }
+}
+
+async function handleLogout() {
+  if (supabase) {
+    await supabase.auth.signOut();
+  }
+  
+  localStorage.removeItem('cached_deadlines');
+  localStorage.removeItem(STORAGE_KEY);
+  tasks = JSON.parse(JSON.stringify(defaultTasks));
+  deadlines = [];
+  
+  renderAll();
+  showLandingPage();
+  showToast('Logged out successfully!', 'success');
+}
+
+async function onLoginSuccess() {
   sessionStorage.removeItem('offline_mode');
   document.getElementById('login-container').style.display = 'none';
   document.getElementById('dashboard-container').style.display = 'block';
   document.getElementById('connect-banner').style.display = 'none';
+  document.getElementById('add-deadline-btn').style.display = 'inline-block';
   
-  fetchUserProfile();
-
-  showSyncState('syncing', 'Syncing Google Drive...');
+  displayUserProfile();
+  
+  showSyncState('syncing', 'Syncing cloud...');
   try {
-    await fetchGoogleDriveTasks();
-    showSyncState('live', 'Google Synced');
+    await fetchTasksFromSupabase();
+    await fetchDeadlinesFromSupabase();
+    showSyncState('live', 'Cloud Synced');
   } catch(e) {
     console.error(e);
-    showSyncState('error', 'Drive sync error');
-    showToast('Could not load tasks from Google Drive.', 'warning');
+    showSyncState('error', 'Sync error');
+    showToast('Failed to load tasks from database.', 'warning');
+  }
+}
+
+function onLogoutSuccess() {
+  document.getElementById('user-widget').style.display = 'none';
+  document.getElementById('add-deadline-btn').style.display = 'none';
+  
+  if (sessionStorage.getItem('offline_mode') === 'true') {
+    enterLocalMode();
+  } else {
+    showLandingPage();
   }
 }
 
@@ -1511,6 +1579,7 @@ function enterLocalMode() {
   document.getElementById('login-container').style.display = 'none';
   document.getElementById('dashboard-container').style.display = 'block';
   document.getElementById('user-widget').style.display = 'none';
+  document.getElementById('add-deadline-btn').style.display = 'inline-block';
   document.getElementById('sync').style.display = 'flex';
   showSyncState('local', 'Local mode');
   document.getElementById('connect-banner').style.display = 'flex';
@@ -1521,260 +1590,58 @@ function showLandingPage() {
   document.getElementById('dashboard-container').style.display = 'none';
 }
 
-function handleLogout() {
-  accessToken = null;
-  googleFileId = null;
-  localStorage.removeItem('gcal_access_token');
-  localStorage.removeItem('gcal_token_expiry');
-  localStorage.removeItem('cached_deadlines');
-  localStorage.removeItem('google_user_profile');
-  
-  // Clear tasks on logout to maintain privacy
-  localStorage.removeItem(STORAGE_KEY);
-  tasks = JSON.parse(JSON.stringify(defaultTasks));
-  
-  renderAll();
-  showLandingPage();
-  showToast('Logged out successfully!', 'success');
-}
-
-async function fetchUserProfile() {
-  if (!accessToken) return;
-  try {
-    const cachedProfile = localStorage.getItem('google_user_profile');
-    if (cachedProfile) {
-      displayUserProfile(JSON.parse(cachedProfile));
-      return;
-    }
-    
-    const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-      headers: { 'Authorization': `Bearer ${accessToken}` }
-    });
-    if (res.ok) {
-      const profile = await res.json();
-      localStorage.setItem('google_user_profile', JSON.stringify(profile));
-      displayUserProfile(profile);
-    }
-  } catch (e) {
-    console.error('Failed to fetch user profile:', e);
-  }
-}
-
-function displayUserProfile(profile) {
+function displayUserProfile() {
+  if (!currentUser) return;
   const userWidget = document.getElementById('user-widget');
   const avatarEl = document.getElementById('user-avatar');
   const nameEl = document.getElementById('user-name');
   
   if (userWidget && avatarEl && nameEl) {
-    avatarEl.src = profile.picture || '';
-    nameEl.textContent = profile.name || 'User';
+    const meta = currentUser.user_metadata;
+    avatarEl.src = meta.avatar_url || meta.picture || '';
+    nameEl.textContent = meta.full_name || meta.name || currentUser.email || 'User';
     userWidget.style.display = 'flex';
   }
 }
 
-/* Google Drive Sync Implementation (AppData Folder) */
-async function fetchGoogleDriveTasks() {
-  if (!accessToken) return;
+/* Supabase DB Operations */
+async function fetchTasksFromSupabase() {
+  if (!currentUser) return;
+  const { data, error } = await supabase
+    .from('tasks')
+    .select('*');
   
-  // Find file in appDataFolder
-  const queryUrl = 'https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name=%27tasks.json%27&fields=files(id,name)';
-  const res = await fetch(queryUrl, {
-    headers: { 'Authorization': `Bearer ${accessToken}` }
-  });
-  
-  if (!res.ok) throw new Error('Failed to query Drive');
-  
-  const data = await res.json();
-  
-  if (data.files && data.files.length > 0) {
-    googleFileId = data.files[0].id;
-    // Download contents
-    const downloadRes = await fetch(`https://www.googleapis.com/drive/v3/files/${googleFileId}?alt=media`, {
-      headers: { 'Authorization': `Bearer ${accessToken}` }
-    });
-    if (downloadRes.ok) {
-      const driveTasks = await downloadRes.json();
-      // Simple merge or overwrite logic. We'll overwrite locally with what's on the cloud, since Drive is the source of truth
-      tasks = driveTasks;
-      saveTasksLocally();
-      renderAll();
-    }
-  } else {
-    // File doesn't exist yet, upload current local state to create it
-    await uploadNewTasksFile();
-  }
-}
-
-async function uploadNewTasksFile() {
-  if (!accessToken) return;
-  
-  // 1. Create metadata
-  const metaRes = await fetch('https://www.googleapis.com/drive/v3/files', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      name: 'tasks.json',
-      parents: ['appDataFolder']
-    })
-  });
-  
-  if (!metaRes.ok) throw new Error('Failed to create file metadata');
-  const meta = await metaRes.json();
-  googleFileId = meta.id;
-  
-  // 2. Upload file contents
-  await syncTasksToGoogleDrive();
-}
-
-async function syncTasksToGoogleDrive() {
-  if (!accessToken || !googleFileId) return;
-  
-  showSyncState('syncing', 'Saving to cloud...');
-  try {
-    const uploadRes = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${googleFileId}?uploadType=media`, {
-      method: 'PATCH',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(tasks)
-    });
-    
-    if (!uploadRes.ok) throw new Error('Cloud save failed');
-    showSyncState('live', 'Saved to Drive');
-  } catch(e) {
-    console.error(e);
-    showSyncState('error', 'Cloud sync failed');
-    showToast('Failed to save to Google Drive.', 'warning');
-  }
-}
-
-/* Google Calendar Sync Implementation */
-async function syncCalendarEvents() {
-  if (!accessToken) {
-    showToast('Please connect your Google Account first!', 'warning');
-    handleAuthClick();
-    return;
-  }
-  
-  const btn = document.getElementById('sync-btn');
-  btn.classList.add('syncing');
-  btn.disabled = true;
-  showSyncState('syncing', 'Syncing calendar...');
-  
-  try {
-    const timeMin = new Date().toISOString();
-    // Get primary calendar events (30 days ahead)
-    const url = `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${encodeURIComponent(timeMin)}&maxResults=80&orderBy=startTime&singleEvents=true`;
-    
-    const res = await fetch(url, {
-      headers: { 'Authorization': `Bearer ${accessToken}` }
-    });
-    
-    if (!res.ok) throw new Error('Calendar fetch error');
-    
-    const data = await res.json();
-    const newDeadlines = [];
-    
-    // Filter and process events (keyword matching)
-    (data.items || []).forEach(evt => {
-      const title = evt.summary || 'Untitled Event';
-      const dateStr = evt.start.date || (evt.start.dateTime ? evt.start.dateTime.slice(0, 10) : null);
-      if (!dateStr) return;
-      
-      const titleLower = title.toLowerCase();
-      let type = '';
-      
-      if (titleLower.includes('exam') || titleLower.includes('klausur') || titleLower.includes('prüfung')) {
-        type = 'exam';
-      } else if (titleLower.includes('submission') || titleLower.includes('abgabe') || titleLower.includes('deliverable')) {
-        type = 'submission';
-      } else if (titleLower.includes('deadline') || titleLower.includes('frist') || titleLower.includes('due')) {
-        type = 'deadline';
-      } else {
-        // Skip events that are just regular calendar invite meetings
-        return;
+  if (!error && data) {
+    const newTasks = JSON.parse(JSON.stringify(defaultTasks));
+    data.forEach(t => {
+      if (newTasks[t.hiwi_id] && newTasks[t.hiwi_id][t.horizon_id]) {
+        newTasks[t.hiwi_id][t.horizon_id].push({
+          id: t.id,
+          text: t.text,
+          done: t.done
+        });
       }
-      
-      newDeadlines.push({ title, date: dateStr, type });
     });
-    
-    deadlines = newDeadlines;
-    localStorage.setItem('cached_deadlines', JSON.stringify(deadlines));
-    
-    showSyncState('live', 'Calendar synced');
+    tasks = newTasks;
     renderAll();
-    showToast('Deadlines loaded from Google Calendar!');
-  } catch (e) {
-    console.error(e);
-    showSyncState('error', 'Calendar sync failed');
-    showToast('Failed to sync calendar.', 'danger');
-  } finally {
-    btn.classList.remove('syncing');
-    btn.disabled = false;
   }
 }
 
-/* Write Event directly to Google Calendar */
-async function submitBlockTime() {
-  if (!accessToken) return;
+async function fetchDeadlinesFromSupabase() {
+  if (!currentUser) return;
+  const { data, error } = await supabase
+    .from('deadlines')
+    .select('*')
+    .order('date', { ascending: true });
   
-  const title = document.getElementById('block-event-title').value.trim();
-  const dateStr = document.getElementById('block-date').value;
-  const start = document.getElementById('block-start').value;
-  const end = document.getElementById('block-end').value;
-  const calendarId = document.getElementById('block-calendar-id').value;
-  
-  if (!title || !dateStr || !start || !end) {
-    showToast('Please fill out all fields.', 'warning');
-    return;
-  }
-  
-  const submitBtn = document.getElementById('block-submit-btn');
-  submitBtn.disabled = true;
-  submitBtn.textContent = 'Scheduling...';
-  
-  try {
-    // Construct request payload
-    const eventPayload = {
-      summary: title,
-      description: `Focus Block scheduled via Study Dashboard for the deadline: ${document.getElementById('block-deadline-title').value}`,
-      start: {
-        dateTime: `${dateStr}T${start}:00`,
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
-      },
-      end: {
-        dateTime: `${dateStr}T${end}:00`,
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
-      }
-    };
-    
-    const url = `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events`;
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(eventPayload)
-    });
-    
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error?.message || 'Failed to create event');
-    }
-    
-    showToast('Focus Block added to Calendar!', 'success');
-    closeBlockModal();
-  } catch(e) {
-    console.error(e);
-    showToast(`Error: ${e.message}`, 'danger');
-  } finally {
-    submitBtn.disabled = false;
-    submitBtn.textContent = 'Schedule on Google';
+  if (!error && data) {
+    deadlines = data.map(d => ({
+      id: d.id,
+      title: d.title,
+      date: d.date,
+      type: d.type
+    }));
+    renderAll();
   }
 }
 
