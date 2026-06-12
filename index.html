@@ -1121,6 +1121,35 @@ window.onerror = function(message, source, lineno, colno, error) {
   </div>`;
   return false;
 };
+window.onunhandledrejection = function(event) {
+  const reason = event.reason;
+  document.body.innerHTML = `<div style="color: #ef4444; background: #fee2e2; border: 1px solid #fca5a5; padding: 2rem; margin: 2rem; border-radius: 8px; font-family: monospace;">
+    <h2 style="margin-bottom: 0.5rem;">⚠️ Unhandled Promise Rejection Captured</h2>
+    <p><strong>Reason:</strong> ${reason ? (reason.message || reason) : 'Unknown reason'}</p>
+    <pre style="margin-top: 1rem; padding: 1rem; background: #fff; border-radius: 4px; overflow-x: auto;">${reason && reason.stack ? reason.stack : ''}</pre>
+  </div>`;
+};
+
+// Safe Local/Session Storage wrappers (resilient to browser blocking / Private Mode)
+function safeGetItem(key) {
+  try { return localStorage.getItem(key); } catch (e) { return null; }
+}
+function safeSetItem(key, val) {
+  try { localStorage.setItem(key, val); return true; } catch (e) { return false; }
+}
+function safeRemoveItem(key) {
+  try { localStorage.removeItem(key); return true; } catch (e) { return false; }
+}
+function safeSessionGetItem(key) {
+  try { return sessionStorage.getItem(key); } catch (e) { return null; }
+}
+function safeSessionSetItem(key, val) {
+  try { sessionStorage.setItem(key, val); return true; } catch (e) { return false; }
+}
+function safeSessionRemoveItem(key) {
+  try { sessionStorage.removeItem(key); return true; } catch (e) { return false; }
+}
+
 const STORAGE_KEY = 'hiwi-tasks-v1';
 const ICON_PLUS  = '<svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>';
 const ICON_CHECK = '<svg class="icon" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>';
@@ -1157,8 +1186,8 @@ const defaultTasks = {
 const SUPABASE_URL = ''; 
 const SUPABASE_ANON_KEY = '';
 
-let supabaseUrl = localStorage.getItem('supabase_url') || SUPABASE_URL;
-let supabaseAnonKey = localStorage.getItem('supabase_anon_key') || SUPABASE_ANON_KEY;
+let supabaseUrl = safeGetItem('supabase_url') || SUPABASE_URL;
+let supabaseAnonKey = safeGetItem('supabase_anon_key') || SUPABASE_ANON_KEY;
 const supabase = (supabaseUrl && supabaseAnonKey) ? Supabase.createClient(supabaseUrl, supabaseAnonKey) : null;
 
 // State variables
@@ -1173,7 +1202,7 @@ document.getElementById('today-str').textContent =
 /* Core Dashboard Data Loading Flow */
 function loadTasks() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = safeGetItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw);
   } catch (e) {}
   return JSON.parse(JSON.stringify(defaultTasks));
@@ -1181,7 +1210,7 @@ function loadTasks() {
 
 function saveTasksLocally() {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+    safeSetItem(STORAGE_KEY, JSON.stringify(tasks));
   } catch (e) {}
 }
 
@@ -1191,7 +1220,7 @@ async function loadInitialData() {
   
   // Load cached deadlines
   try {
-    const cached = localStorage.getItem('cached_deadlines');
+    const cached = safeGetItem('cached_deadlines');
     if (cached) deadlines = JSON.parse(cached);
   } catch(e) {}
   
@@ -1459,8 +1488,8 @@ function showSyncState(cls, txt) {
 
 /* Modals Management */
 function openSettings() {
-  document.getElementById('settings-supabase-url').value = localStorage.getItem('supabase_url') || SUPABASE_URL;
-  document.getElementById('settings-supabase-key').value = localStorage.getItem('supabase_anon_key') || SUPABASE_ANON_KEY;
+  document.getElementById('settings-supabase-url').value = safeGetItem('supabase_url') || SUPABASE_URL;
+  document.getElementById('settings-supabase-key').value = safeGetItem('supabase_anon_key') || SUPABASE_ANON_KEY;
   document.getElementById('modal-settings').classList.add('open');
 }
 
@@ -1472,8 +1501,8 @@ function saveSettings() {
   const url = document.getElementById('settings-supabase-url').value.trim();
   const key = document.getElementById('settings-supabase-key').value.trim();
   
-  localStorage.setItem('supabase_url', url);
-  localStorage.setItem('supabase_anon_key', key);
+  safeSetItem('supabase_url', url);
+  safeSetItem('supabase_anon_key', key);
   
   closeSettings();
   showToast('Settings saved! Reloading...', 'success');
@@ -1529,7 +1558,7 @@ async function submitDeadline() {
       showToast('Failed to save to cloud', 'warning');
     }
   } else {
-    localStorage.setItem('cached_deadlines', JSON.stringify(deadlines));
+    safeSetItem('cached_deadlines', JSON.stringify(deadlines));
   }
 }
 
@@ -1547,7 +1576,7 @@ async function deleteDeadline(id) {
       console.error(e);
     }
   } else {
-    localStorage.setItem('cached_deadlines', JSON.stringify(deadlines));
+    safeSetItem('cached_deadlines', JSON.stringify(deadlines));
   }
   showToast('Deadline deleted!', 'success');
 }
@@ -1576,8 +1605,8 @@ async function handleLogout() {
     await supabase.auth.signOut();
   }
   
-  localStorage.removeItem('cached_deadlines');
-  localStorage.removeItem(STORAGE_KEY);
+  safeRemoveItem('cached_deadlines');
+  safeRemoveItem(STORAGE_KEY);
   tasks = JSON.parse(JSON.stringify(defaultTasks));
   deadlines = [];
   
@@ -1587,7 +1616,7 @@ async function handleLogout() {
 }
 
 async function onLoginSuccess() {
-  sessionStorage.removeItem('offline_mode');
+  safeSessionRemoveItem('offline_mode');
   document.getElementById('login-container').style.display = 'none';
   document.getElementById('dashboard-container').style.display = 'block';
   document.getElementById('connect-banner').style.display = 'none';
@@ -1611,7 +1640,7 @@ function onLogoutSuccess() {
   document.getElementById('user-widget').style.display = 'none';
   document.getElementById('add-deadline-btn').style.display = 'none';
   
-  if (sessionStorage.getItem('offline_mode') === 'true') {
+  if (safeSessionGetItem('offline_mode') === 'true') {
     enterLocalMode();
   } else {
     showLandingPage();
@@ -1619,7 +1648,7 @@ function onLogoutSuccess() {
 }
 
 function enterLocalMode() {
-  sessionStorage.setItem('offline_mode', 'true');
+  safeSessionSetItem('offline_mode', 'true');
   document.getElementById('login-container').style.display = 'none';
   document.getElementById('dashboard-container').style.display = 'block';
   document.getElementById('user-widget').style.display = 'none';
