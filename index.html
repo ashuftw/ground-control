@@ -1112,6 +1112,15 @@
 <!-- Supabase Client SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+window.onerror = function(message, source, lineno, colno, error) {
+  document.body.innerHTML = `<div style="color: #ef4444; background: #fee2e2; border: 1px solid #fca5a5; padding: 2rem; margin: 2rem; border-radius: 8px; font-family: monospace;">
+    <h2 style="margin-bottom: 0.5rem;">⚠️ Runtime Error Captured</h2>
+    <p><strong>Message:</strong> ${message}</p>
+    <p><strong>Source:</strong> ${source} (Line ${lineno}:${colno})</p>
+    <pre style="margin-top: 1rem; padding: 1rem; background: #fff; border-radius: 4px; overflow-x: auto;">${error ? error.stack : ''}</pre>
+  </div>`;
+  return false;
+};
 const STORAGE_KEY = 'hiwi-tasks-v1';
 const ICON_PLUS  = '<svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>';
 const ICON_CHECK = '<svg class="icon" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>';
@@ -1197,8 +1206,43 @@ async function loadInitialData() {
   }
   renderAll();
   
+  // Safety Timeout Fallback: if auth check hangs, force load local offline mode
+  setTimeout(() => {
+    const loginUI = document.getElementById('login-container');
+    const dashboardUI = document.getElementById('dashboard-container');
+    if (loginUI.style.display !== 'flex' && dashboardUI.style.display !== 'block') {
+      console.warn('Auth check timed out. Falling back to local mode.');
+      enterLocalMode();
+      showToast('Database connection timed out. Using local mode.', 'warning');
+    }
+  }, 2500);
+
   if (supabase) {
+    let authChecked = false;
+    
+    // Get initial session immediately
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (authChecked) return;
+      authChecked = true;
+      if (session) {
+        currentUser = session.user;
+        onLoginSuccess();
+      } else {
+        currentUser = null;
+        onLogoutSuccess();
+      }
+    }).catch(err => {
+      console.error(err);
+      if (!authChecked) {
+        authChecked = true;
+        enterLocalMode();
+      }
+    });
+
+    // Listen for subsequent auth changes
     supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'INITIAL_SESSION') return;
+      authChecked = true;
       if (session) {
         currentUser = session.user;
         await onLoginSuccess();
