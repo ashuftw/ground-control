@@ -1150,7 +1150,7 @@ const SUPABASE_ANON_KEY = '';
 
 let supabaseUrl = localStorage.getItem('supabase_url') || SUPABASE_URL;
 let supabaseAnonKey = localStorage.getItem('supabase_anon_key') || SUPABASE_ANON_KEY;
-const supabase = (supabaseUrl && supabaseAnonKey) ? supabase.createClient(supabaseUrl, supabaseAnonKey) : null;
+const supabase = (supabaseUrl && supabaseAnonKey) ? Supabase.createClient(supabaseUrl, supabaseAnonKey) : null;
 
 // State variables
 let tasks = JSON.parse(JSON.stringify(defaultTasks));
