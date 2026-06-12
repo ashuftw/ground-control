@@ -954,8 +954,18 @@ const HIWIS = [
 ];
 
 const defaultTasks = {
-  tubs: { today: [], next: [], pending: [], backlog: [] },
-  tub: { today: [], next: [], pending: [], backlog: [] }
+  tubs: {
+    today:   [{ id: 't1', text: 'Plan next weeks task list', done: false }],
+    next:    [{ id: 't2', text: 'Document and run code', done: false }],
+    pending: [],
+    backlog: [],
+  },
+  tub: {
+    today:   [{ id: 't3', text: 'Arrange IWF literature meeting', done: false }],
+    next:    [{ id: 't4', text: 'Implement vacuum swing model', done: false }],
+    pending: [{ id: 't5', text: 'CO₂ sequestration research questions', done: false }],
+    backlog: [],
+  },
 };
 
 // CONFIGURATION: Set this to your Google OAuth Client ID to make this a public website!

@@ -146,4 +146,4 @@ If you want Claude (e.g. Claude Desktop) to read your tasks and help check thing
 
 Claude can load this server locally via stdin/stdout, read the `tasks.json` file synced to your local machine, and let you complete tasks directly from your chat prompt:
 > *"Claude, what are my tasks for TU Berlin today?"*
-> *"Claude, I finished planning work for Silas, check it off."*
+> *"Claude, I finished documenting and running the code, check it off."*
