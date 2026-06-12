@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ashu's Dashboard</title>
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  :root {
+    --bg: #fafafa;
+    --bg-card: #ffffff;
+    --bg-hover: #f3f4f6;
+    --border: rgba(0, 0, 0, 0.06);
+    --border-hover: rgba(0, 0, 0, 0.12);
+    --text: #111827;
+    --text-sec: #4b5563;
+    --text-muted: #9ca3af;
+    
+    --primary: #4f46e5;
+    --primary-light: #e0e7ff;
+    --primary-text: #3730a3;
+    
+    --success: #10b981;
+    --success-light: #ecfdf5;
+    --success-text: #065f46;
+    
+    --warning: #f59e0b;
+    --warning-light: #fffbeb;
+    --warning-text: #92400e;
+    
+    --danger: #ef4444;
+    --danger-light: #fef2f2;
+    --danger-text: #991b1b;
+    
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --font-heading: 'Outfit', sans-serif;
+    --font-body: 'Plus Jakarta Sans', sans-serif;
+    --shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -2px rgba(0,0,0,0.02);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b0c10;
+      --bg-card: #13151a;
+      --bg-hover: #1c1f26;
+      --border: rgba(255, 255, 255, 0.05);
+      --border-hover: rgba(255, 255, 255, 0.12);
+      --text: #f3f4f6;
+      --text-sec: #9ca3af;
+      --text-muted: #6b7280;
+      
+      --primary: #6366f1;
+      --primary-light: #1e1b4b;
+      --primary-text: #c7d2fe;
+      
+      --success: #10b981;
+      --success-light: #062f22;
+      --success-text: #a7f3d0;
+      
+      --warning: #fbbf24;
+      --warning-light: #451a03;
+      --warning-text: #fde68a;
+      
+      --danger: #f87171;
+      --danger-light: #450a0a;
+      --danger-text: #fca5a5;
+      
+      --shadow: 0 4px 6px -1px rgba(0,0,0,0.2), 0 2px 4px -1px rgba(0,0,0,0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.3), 0 4px 6px -2px rgba(0,0,0,0.15);
+    }
+  }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    line-height: 1.5;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  /* Header Section */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  
+  header h1 {
+    font-family: var(--font-heading);
+    font-size: 1.8rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, var(--primary) 0%, #d946ef 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  header .sub {
+    color: var(--text-sec);
+    font-size: 0.85rem;
+    margin-top: 0.2rem;
+  }
+  
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  /* Connection Banner */
+  .banner {
+    background: var(--primary-light);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 0.85rem 1.25rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: var(--primary-text);
+    gap: 1rem;
+  }
+
+  .banner-text {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+  }
+
+  .banner-btn {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: filter 0.2s;
+  }
+  
+  .banner-btn:hover {
+    filter: brightness(1.1);
+  }
+
+  /* Buttons & Badges */
+  .sync-state {
+    font-size: 0.75rem;
+    color: var(--text-sec);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--bg-card);
+    padding: 0.4rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    font-weight: 500;
+  }
+  
+  .sync-state .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-muted);
+  }
+  
+  .sync-state.live .dot { background: var(--success); box-shadow: 0 0 8px var(--success); }
+  .sync-state.local .dot { background: var(--warning); box-shadow: 0 0 8px var(--warning); }
+  .sync-state.syncing .dot { background: var(--primary); box-shadow: 0 0 8px var(--primary); animation: pulse 1.2s infinite ease-in-out; }
+  .sync-state.error .dot { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    background: var(--bg-card);
+    color: var(--text-sec);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 0.5rem 0.85rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--font-body);
+    transition: all 0.2s;
+  }
+  
+  .btn:hover {
+    background: var(--bg-hover);
+    color: var(--text);
+    border-color: var(--border-hover);
+    transform: translateY(-1px);
+  }
+
+  .btn-primary {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+  }
+
+  .btn-primary:hover {
+    background: var(--primary);
+    color: #fff;
+    filter: brightness(1.1);
+  }
+  
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+
+  .btn.syncing svg {
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .icon {
+    width: 1.1em;
+    height: 1.1em;
+    vertical-align: -0.15em;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Metrics Grid */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .metric {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 0.85rem 1rem;
+    box-shadow: var(--shadow);
+    transition: transform 0.2s, border-color 0.2s;
+  }
+
+  .metric:hover {
+    border-color: var(--border-hover);
+  }
+  
+  .metric .num {
+    font-family: var(--font-heading);
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  
+  .metric .lbl {
+    font-size: 0.7rem;
+    color: var(--text-sec);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+    margin-top: 0.1rem;
+  }
+
+  .section-title {
+    font-family: var(--font-heading);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-sec);
+    margin: 2rem 0 0.85rem;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* Deadlines Grid */
+  .deadlines {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  
+  .deadline {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 0.85rem 1.1rem;
+    box-shadow: var(--shadow);
+    transition: all 0.2s;
+  }
+
+  .deadline:hover {
+    transform: translateX(4px);
+    border-color: var(--border-hover);
+  }
+  
+  .deadline .count {
+    min-width: 56px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .deadline .count .n {
+    font-family: var(--font-heading);
+    font-size: 1.4rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+  
+  .deadline .count .u {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-top: 0.15rem;
+  }
+  
+  .deadline .body {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .deadline .body .t {
+    font-weight: 600;
+    font-size: 0.95rem;
+    letter-spacing: -0.01em;
+  }
+  
+  .deadline .body .d {
+    font-size: 0.78rem;
+    color: var(--text-sec);
+    margin-top: 0.1rem;
+  }
+  
+  .deadline .bar {
+    margin-top: 0.5rem;
+    height: 4px;
+    border-radius: 999px;
+    background: var(--bg-hover);
+    overflow: hidden;
+  }
+  
+  .deadline .bar span {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: var(--text-muted);
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .deadline.soon .bar span { background: var(--warning); }
+  .deadline.urgent .bar span { background: var(--danger); }
+  
+  .deadline.urgent { background: var(--danger-light); border-color: var(--danger); color: var(--danger-text); }
+  .deadline.urgent .n { color: var(--danger); }
+  .deadline.urgent .u, .deadline.urgent .d { color: var(--danger-text); opacity: 0.8; }
+  
+  .deadline.soon { background: var(--warning-light); border-color: var(--warning); color: var(--warning-text); }
+  .deadline.soon .n { color: var(--warning); }
+  .deadline.soon .u, .deadline.soon .d { color: var(--warning-text); opacity: 0.8; }
+
+  /* HiWi Sections */
+  .hiwis {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  
+  @media (max-width: 650px) {
+    .hiwis { grid-template-columns: 1fr; }
+    .metrics { grid-template-columns: repeat(2, 1fr); }
+  }
+  
+  .hiwi {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.1rem;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .hiwi h3 {
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+  
+  .hiwi .loc {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-bottom: 1rem;
+  }
+
+  .horizon {
+    margin-bottom: 0.85rem;
+  }
+  
+  .horizon .h-lbl {
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-sec);
+    margin-bottom: 0.4rem;
+    font-weight: 700;
+    border-bottom: 1px dashed var(--border);
+    padding-bottom: 0.15rem;
+  }
+  
+  .task {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    padding: 0.4rem 0.2rem;
+    font-size: 0.85rem;
+    border-radius: var(--radius-sm);
+    transition: background 0.15s;
+  }
+
+  .task:hover {
+    background: var(--bg-hover);
+  }
+  
+  .task .check {
+    width: 17px;
+    height: 17px;
+    border: 2px solid var(--text-muted);
+    border-radius: 4px;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-top: 1.5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  
+  .task .check.done {
+    background: var(--success);
+    border-color: var(--success);
+    color: #fff;
+  }
+  
+  .task .check.done svg {
+    width: 12px;
+    height: 12px;
+    stroke-width: 3.5;
+  }
+  
+  .task .txt {
+    flex: 1;
+    min-width: 0;
+    transition: color 0.2s;
+  }
+  
+  .task.complete .txt {
+    text-decoration: line-through;
+    color: var(--text-muted);
+  }
+  
+  .task .del {
+    opacity: 0;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    padding: 0 0.2rem;
+    transition: opacity 0.2s, color 0.2s;
+  }
+  
+  .task:hover .del {
+    opacity: 1;
+  }
+  
+  .task .del:hover {
+    color: var(--danger);
+  }
+
+  .add-row {
+    margin-top: auto;
+    padding-top: 0.5rem;
+  }
+  
+  .add-toggle {
+    font-family: var(--font-body);
+    font-size: 0.78rem;
+    color: var(--primary);
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0.3rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-weight: 600;
+    transition: filter 0.2s;
+  }
+
+  .add-toggle:hover {
+    filter: brightness(1.2);
+  }
+  
+  .add-form {
+    display: none;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    background: var(--bg-hover);
+    padding: 0.75rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+  }
+  
+  .add-form.open {
+    display: flex;
+  }
+  
+  .add-form input, .add-form select {
+    width: 100%;
+    padding: 0.45rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-card);
+    color: var(--text);
+    font-size: 0.8rem;
+    font-family: var(--font-body);
+    outline: none;
+  }
+
+  .add-form input:focus, .add-form select:focus {
+    border-color: var(--primary);
+  }
+  
+  .add-form .btns {
+    display: flex;
+    gap: 0.4rem;
+  }
+  
+  .add-form button {
+    flex: 1;
+    padding: 0.45rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    font-family: var(--font-body);
+    transition: all 0.2s;
+  }
+  
+  .add-form .confirm {
+    background: var(--success);
+    color: #fff;
+    border-color: var(--success);
+  }
+
+  .add-form .confirm:hover {
+    filter: brightness(1.1);
+  }
+  
+  .add-form .cancel {
+    background: var(--bg-card);
+    color: var(--text-sec);
+  }
+
+  .add-form .cancel:hover {
+    background: var(--bg-hover);
+  }
+
+  .empty {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-style: italic;
+    padding: 0.4rem 0.2rem;
+  }
+
+  /* Modals */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+  }
+
+  .modal-overlay.open {
+    display: flex;
+  }
+
+  .modal {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 480px;
+    box-shadow: var(--shadow-lg);
+    animation: modalIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  @keyframes modalIn {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .modal-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .modal-header h3 {
+    font-family: var(--font-heading);
+    font-size: 1.2rem;
+    font-weight: 700;
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.2rem;
+    border-radius: var(--radius-sm);
+  }
+
+  .modal-close:hover {
+    background: var(--bg-hover);
+    color: var(--text);
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+
+  .modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    background: var(--bg-hover);
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .form-group label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-sec);
+  }
+
+  .form-group input, .form-group textarea, .form-group select {
+    padding: 0.55rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    outline: none;
+  }
+
+  .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+    border-color: var(--primary);
+  }
+
+  .instruction-box {
+    background: var(--primary-light);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1rem;
+    font-size: 0.75rem;
+    color: var(--primary-text);
+    line-height: 1.45;
+  }
+
+  .instruction-box ol {
+    margin-left: 1.2rem;
+    margin-top: 0.35rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  /* Toasts */
+  .toast-container {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    z-index: 1100;
+  }
+
+  .toast {
+    background: var(--bg-card);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--primary);
+    padding: 0.75rem 1.25rem;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    font-size: 0.82rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    animation: toastIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    max-width: 320px;
+  }
+
+  .toast.success { border-left-color: var(--success); }
+  .toast.danger { border-left-color: var(--danger); }
+  .toast.warning { border-left-color: var(--warning); }
+
+  @keyframes toastIn {
+    from { transform: translateY(1rem); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  footer {
+    margin-top: 2.5rem;
+    text-align: center;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  footer a {
+    color: var(--primary);
+    text-decoration: none;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  
+  <!-- Connection Prompt Banner -->
+  <div class="banner" id="connect-banner" style="display: none;">
+    <div class="banner-text">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10zM2 12h20M20.5 5A17 17 0 0 0 18 12a17 17 0 0 0 2.5 7M3.5 5A17 17 0 0 1 6 12a17 17 0 0 1-2.5 7"/></svg>
+      <span>Sync tasks across devices and load deadlines from Google Calendar</span>
+    </div>
+    <button class="banner-btn" onclick="handleAuthClick()">Connect Google Account</button>
+  </div>
+
+  <header>
+    <div>
+      <h1>Ashu's Dashboard</h1>
+      <div class="sub" id="today-str"></div>
+    </div>
+    <div class="header-right">
+      <div class="sync-state local" id="sync">
+        <span class="dot"></span>
+        <span id="sync-txt">Local mode</span>
+      </div>
+      <button class="btn" id="sync-btn" onclick="syncCalendarEvents()">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-.5 4"/><path d="M20 5v6h-6"/></svg>
+        Sync Calendar
+      </button>
+      <button class="btn" onclick="openSettings()" aria-label="Settings">
+        <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Metrics Grid -->
+  <div class="metrics" id="metrics"></div>
+
+  <!-- Deadlines Section -->
+  <div class="section-title">
+    <span>Deadlines & Exams</span>
+  </div>
+  <div class="deadlines" id="deadlines"></div>
+
+  <!-- HiWi Tasks Section -->
+  <div class="section-title">
+    <span>HiWi Workspace</span>
+  </div>
+  <div class="hiwis" id="hiwis"></div>
+
+  <footer>
+    Ashu's Dashboard · Cloud data securely saved inside your private Google Drive App Folder.
+  </footer>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="modal-settings">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Settings</h3>
+      <button class="modal-close" onclick="closeSettings()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="settings-client-id">Google OAuth Client ID</label>
+        <input type="text" id="settings-client-id" placeholder="xxxx-xxxx.apps.googleusercontent.com" />
+        <div id="settings-default-note" style="display: none; font-size: 0.75rem; color: var(--text-sec); margin-top: 0.35rem; line-height: 1.4;">
+          ℹ️ Using website's default Client ID. Clear this input to reset or enter your own to override.
+        </div>
+      </div>
+      
+      <div class="instruction-box">
+        <strong>How to get your Client ID:</strong>
+        <ol>
+          <li>Open the <a href="https://console.cloud.google.com" target="_blank" rel="noopener">Google Cloud Console</a>.</li>
+          <li>Create a project and enable the <strong>Google Calendar API</strong> and <strong>Google Drive API</strong>.</li>
+          <li>Go to "OAuth Consent Screen", choose External, add your email under Test Users, and add scopes for <code>drive.appdata</code> and <code>calendar.events</code>.</li>
+          <li>Go to "Credentials", click "Create Credentials" &rarr; "OAuth client ID" (select "Web Application").</li>
+          <li>Add <code>http://localhost:8000</code> (or your current web URL) to the <strong>Authorized JavaScript origins</strong>.</li>
+          <li>Copy the Client ID and paste it here.</li>
+        </ol>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeSettings()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSettings()">Save & Connect</button>
+    </div>
+  </div>
+</div>
+
+<!-- Block Time Modal -->
+<div class="modal-overlay" id="modal-block">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Schedule Focus Block</h3>
+      <button class="modal-close" onclick="closeBlockModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="block-deadline-title" />
+      <div class="form-group">
+        <label>Event Name</label>
+        <input type="text" id="block-event-title" />
+      </div>
+      <div class="form-group">
+        <label>Date</label>
+        <input type="date" id="block-date" />
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+        <div class="form-group">
+          <label>Start Time</label>
+          <input type="time" id="block-start" value="10:00" />
+        </div>
+        <div class="form-group">
+          <label>End Time</label>
+          <input type="time" id="block-end" value="12:00" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Calendar ID</label>
+        <select id="block-calendar-id">
+          <option value="primary">Primary Calendar</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeBlockModal()">Cancel</button>
+      <button class="btn btn-primary" id="block-submit-btn" onclick="submitBlockTime()">Schedule on Google</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- Google API & GIS Scripts -->
+<script src="https://accounts.google.com/gsi/client" onload="initGis()" async defer></script>
+<script>
+const STORAGE_KEY = 'hiwi-tasks-v1';
+const ICON_PLUS  = '<svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>';
+const ICON_CHECK = '<svg class="icon" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>';
+const ICON_X     = '<svg class="icon" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+
+const HORIZONS = [
+  { id: 'today', label: 'Today' },
+  { id: 'next', label: 'Next up' },
+  { id: 'pending', label: 'Pending' },
+  { id: 'backlog', label: 'Backlog' },
+];
+
+const HIWIS = [
+  { id: 'tubs', name: 'TU Braunschweig', loc: 'TUBS HiWi' },
+  { id: 'tub', name: 'TU Berlin', loc: 'TUB HiWi · remote' },
+];
+
+const defaultTasks = {
+  tubs: { today: [], next: [], pending: [], backlog: [] },
+  tub: { today: [], next: [], pending: [], backlog: [] }
+};
+
+// CONFIGURATION: Set this to your Google OAuth Client ID to make this a public website!
+// Anyone visiting the site will be able to log in directly without setting up credentials.
+const DEFAULT_CLIENT_ID = ''; 
+
+// State variables
+let tasks = JSON.parse(JSON.stringify(defaultTasks));
+let deadlines = [];
+let tokenClient;
+let accessToken = null;
+let googleFileId = null; // Google Drive tasks.json ID
+let clientId = localStorage.getItem('gcal_client_id') || DEFAULT_CLIENT_ID;
+
+// Initialize today's date
+document.getElementById('today-str').textContent =
+  new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+
+/* Core Dashboard Data Loading Flow */
+function loadTasks() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return JSON.parse(JSON.stringify(defaultTasks));
+}
+
+function saveTasksLocally() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+  } catch (e) {}
+}
+
+async function loadInitialData() {
+  // Load local tasks first (fallback / offline preview)
+  tasks = loadTasks();
+  
+  // Load cached deadlines
+  try {
+    const cached = localStorage.getItem('cached_deadlines');
+    if (cached) deadlines = JSON.parse(cached);
+  } catch(e) {}
+  
+  if (!deadlines.length) {
+    // Seed default deadlines if nothing cached
+    deadlines = [
+      { title: 'Exam Registration', date: '2026-06-30', type: 'deadline' },
+      { title: 'Deutschlandstipendium', date: '2026-06-30', type: 'deadline' },
+      { title: 'ESMIA Written Submission', date: '2026-06-30', type: 'submission' },
+      { title: 'Plant Hydraulics', date: '2026-07-24', type: 'exam' }
+    ];
+  }
+  
+  renderAll();
+  
+  if (clientId) {
+    checkAuth();
+  } else {
+    showSyncState('local', 'Local mode');
+    document.getElementById('connect-banner').style.display = 'flex';
+  }
+}
+
+// Render Metrics
+function renderMetrics() {
+  let total = 0, done = 0;
+  Object.values(tasks).forEach(h => Object.values(h).forEach(list => list.forEach(t => { total++; if (t.done) done++; })));
+  const next = [...deadlines].map(d => daysUntil(d.date)).filter(n => n >= 0).sort((a,b)=>a-b)[0];
+  const metrics = [
+    { num: total - done, lbl: 'Open tasks' },
+    { num: done, lbl: 'Completed' },
+    { num: deadlines.length, lbl: 'Deadlines' },
+    { num: next === undefined ? '–' : next, lbl: 'Days to next' },
+  ];
+  document.getElementById('metrics').innerHTML = metrics.map(m =>
+    `<div class="metric"><div class="num">${m.num}</div><div class="lbl">${m.lbl}</div></div>`).join('');
+}
+
+// Calculate days difference
+function daysUntil(dateStr) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const d = new Date(dateStr + 'T00:00:00');
+  return Math.round((d - today) / 86400000);
+}
+
+// Render Deadlines
+function renderDeadlines() {
+  const sorted = [...deadlines].sort((a,b) => daysUntil(a.date) - daysUntil(b.date));
+  const el = document.getElementById('deadlines');
+  
+  if (!sorted.length) {
+    el.innerHTML = '<div class="deadline"><div class="body"><div class="empty">No deadlines found. Sync your calendar to load.</div></div></div>';
+    return;
+  }
+  
+  el.innerHTML = sorted.map(d => {
+    const n = daysUntil(d.date);
+    const cls = n < 0 ? '' : n <= 3 ? 'urgent' : n <= 7 ? 'soon' : '';
+    const label = n < 0 ? 'past' : n === 0 ? 'today' : n === 1 ? 'day' : 'days';
+    const num = n < 0 ? '!' : n;
+    const HORIZON = 30;
+    const pct = Math.max(0, Math.min(100, ((HORIZON - n) / HORIZON) * 100));
+    const dateFmt = new Date(d.date + 'T00:00:00').toLocaleDateString('en-GB', { day:'numeric', month:'short' });
+    return `<div class="deadline ${cls}">
+      <div class="count"><div class="n">${num}</div><div class="u">${label}</div></div>
+      <div class="body"><div class="t">${esc(d.title)}</div><div class="d">${dateFmt} · ${esc(d.type||'')}</div>
+        <div class="bar"><span style="width:${pct}%"></span></div>
+      </div>
+      <button class="btn" onclick="openBlockModal('${esc(d.title)}','${d.date}')">Block time</button>
+    </div>`;
+  }).join('');
+}
+
+// Render HiWi columns
+function renderHiwis() {
+  document.getElementById('hiwis').innerHTML = HIWIS.map(h => {
+    const data = tasks[h.id] || { today: [], next: [], pending: [], backlog: [] };
+    const horizons = HORIZONS.map(hz => {
+      const list = data[hz.id] || [];
+      const items = list.length ? list.map(t => taskRow(h.id, hz.id, t)).join('')
+        : `<div class="empty">nothing here</div>`;
+      return `<div class="horizon"><div class="h-lbl">${hz.label}</div>${items}</div>`;
+    }).join('');
+    return `<div class="hiwi">
+      <h3>${h.name}</h3><div class="loc">${h.loc}</div>
+      <div style="flex: 1;">${horizons}</div>
+      <div class="add-row">
+        <button class="add-toggle" onclick="toggleAdd('${h.id}')">${ICON_PLUS} Add task</button>
+        <div class="add-form" id="form-${h.id}">
+          <input type="text" id="input-${h.id}" placeholder="Task description" onkeydown="if(event.key==='Enter')addTask('${h.id}')" />
+          <select id="hz-${h.id}">${HORIZONS.map(x=>`<option value="${x.id}">${x.label}</option>`).join('')}</select>
+          <div class="btns">
+            <button class="confirm" onclick="addTask('${h.id}')">Add</button>
+            <button class="cancel" onclick="toggleAdd('${h.id}')">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function taskRow(hiwiId, hzId, t) {
+  return `<div class="task ${t.done?'complete':''}">
+    <div class="check ${t.done?'done':''}" onclick="toggleTask('${hiwiId}','${hzId}','${t.id}')">${t.done?ICON_CHECK:''}</div>
+    <div class="txt">${esc(t.text)}</div>
+    <button class="del" onclick="delTask('${hiwiId}','${hzId}','${t.id}')">${ICON_X}</button>
+  </div>`;
+}
+
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function toggleAdd(h){
+  const el = document.getElementById('form-'+h);
+  el.classList.toggle('open');
+  if (el.classList.contains('open')) {
+    document.getElementById('input-'+h).focus();
+  }
+}
+
+async function addTask(h){
+  const inp = document.getElementById('input-'+h);
+  const hz = document.getElementById('hz-'+h).value;
+  const text = inp.value.trim(); if(!text) return;
+  
+  if(!tasks[h]) tasks[h] = {};
+  if(!tasks[h][hz]) tasks[h][hz] = [];
+  
+  tasks[h][hz].push({ id: 'k' + Math.random().toString(36).slice(2, 9), text, done: false });
+  inp.value = '';
+  renderAll();
+  
+  // Save flow
+  saveTasksLocally();
+  await syncTasksToGoogleDrive();
+}
+
+async function toggleTask(h, hz, id){
+  const t = tasks[h][hz].find(x=>x.id===id); if(!t) return;
+  t.done = !t.done;
+  renderAll();
+  
+  saveTasksLocally();
+  await syncTasksToGoogleDrive();
+}
+
+async function delTask(h, hz, id){
+  tasks[h][hz] = tasks[h][hz].filter(x=>x.id!==id);
+  renderAll();
+  
+  saveTasksLocally();
+  await syncTasksToGoogleDrive();
+}
+
+function renderAll() {
+  renderMetrics();
+  renderDeadlines();
+  renderHiwis();
+}
+
+/* Toast System */
+function showToast(msg, type = 'success') {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `<span>${msg}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(10px)';
+    toast.style.transition = 'all 0.3s';
+    setTimeout(() => toast.remove(), 300);
+  }, 2500);
+}
+
+function showSyncState(cls, txt) {
+  const el = document.getElementById('sync');
+  el.className = 'sync-state ' + cls;
+  document.getElementById('sync-txt').textContent = txt;
+}
+
+/* Modals Management */
+function openSettings() {
+  document.getElementById('settings-client-id').value = localStorage.getItem('gcal_client_id') || '';
+  const noteEl = document.getElementById('settings-default-note');
+  if (noteEl) {
+    noteEl.style.display = DEFAULT_CLIENT_ID ? 'block' : 'none';
+  }
+  document.getElementById('modal-settings').classList.add('open');
+}
+
+function closeSettings() {
+  document.getElementById('modal-settings').classList.remove('open');
+}
+
+function saveSettings() {
+  const val = document.getElementById('settings-client-id').value.trim();
+  localStorage.setItem('gcal_client_id', val);
+  clientId = val || DEFAULT_CLIENT_ID;
+  closeSettings();
+  showToast('Settings saved!', 'success');
+  initGis();
+}
+
+// Scheduler Modal
+function openBlockModal(title, dateStr) {
+  document.getElementById('block-deadline-title').value = title;
+  document.getElementById('block-event-title').value = `Focus: Prep for ${title}`;
+  
+  // Pre-fill date to 1 day before deadline if possible, otherwise today
+  const dlDate = new Date(dateStr);
+  dlDate.setDate(dlDate.getDate() - 1);
+  const localDateStr = dlDate.toISOString().slice(0, 10);
+  document.getElementById('block-date').value = localDateStr;
+  
+  document.getElementById('modal-block').classList.add('open');
+}
+
+function closeBlockModal() {
+  document.getElementById('modal-block').classList.remove('open');
+}
+
+/* Google API OAuth Integration */
+function initGis() {
+  if (!clientId) {
+    showSyncState('local', 'Local mode');
+    return;
+  }
+  
+  try {
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: clientId,
+      scope: 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/drive.appdata',
+      callback: async (tokenResponse) => {
+        if (tokenResponse.error !== undefined) {
+          showSyncState('error', 'Auth error');
+          showToast('Google authentication failed', 'danger');
+          console.error(tokenResponse);
+          return;
+        }
+        
+        accessToken = tokenResponse.access_token;
+        localStorage.setItem('gcal_access_token', accessToken);
+        localStorage.setItem('gcal_token_expiry', (Date.now() + tokenResponse.expires_in * 1000).toString());
+        
+        showToast('Connected to Google!', 'success');
+        document.getElementById('connect-banner').style.display = 'none';
+        
+        await onAuthSuccess();
+      },
+    });
+    checkAuth();
+  } catch (e) {
+    console.error('Error initializing Google Identity Services:', e);
+    showSyncState('error', 'SDK load failed');
+  }
+}
+
+function checkAuth() {
+  const token = localStorage.getItem('gcal_access_token');
+  const expiry = localStorage.getItem('gcal_token_expiry');
+  if (token && expiry && Date.now() < parseInt(expiry)) {
+    accessToken = token;
+    document.getElementById('connect-banner').style.display = 'none';
+    onAuthSuccess();
+  } else {
+    // Attempt silent login
+    try {
+      tokenClient.requestAccessToken({ prompt: 'none' });
+    } catch(e) {
+      showSyncState('local', 'Local mode');
+      document.getElementById('connect-banner').style.display = 'flex';
+    }
+  }
+}
+
+function handleAuthClick() {
+  if (tokenClient) {
+    tokenClient.requestAccessToken({ prompt: 'consent' });
+  } else {
+    openSettings();
+  }
+}
+
+async function onAuthSuccess() {
+  showSyncState('syncing', 'Syncing Google Drive...');
+  try {
+    await fetchGoogleDriveTasks();
+    showSyncState('live', 'Google Synced');
+  } catch(e) {
+    console.error(e);
+    showSyncState('error', 'Drive sync error');
+    showToast('Could not load tasks from Google Drive.', 'warning');
+  }
+}
+
+/* Google Drive Sync Implementation (AppData Folder) */
+async function fetchGoogleDriveTasks() {
+  if (!accessToken) return;
+  
+  // Find file in appDataFolder
+  const queryUrl = 'https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name=%27tasks.json%27&fields=files(id,name)';
+  const res = await fetch(queryUrl, {
+    headers: { 'Authorization': `Bearer ${accessToken}` }
+  });
+  
+  if (!res.ok) throw new Error('Failed to query Drive');
+  
+  const data = await res.json();
+  
+  if (data.files && data.files.length > 0) {
+    googleFileId = data.files[0].id;
+    // Download contents
+    const downloadRes = await fetch(`https://www.googleapis.com/drive/v3/files/${googleFileId}?alt=media`, {
+      headers: { 'Authorization': `Bearer ${accessToken}` }
+    });
+    if (downloadRes.ok) {
+      const driveTasks = await downloadRes.json();
+      // Simple merge or overwrite logic. We'll overwrite locally with what's on the cloud, since Drive is the source of truth
+      tasks = driveTasks;
+      saveTasksLocally();
+      renderAll();
+    }
+  } else {
+    // File doesn't exist yet, upload current local state to create it
+    await uploadNewTasksFile();
+  }
+}
+
+async function uploadNewTasksFile() {
+  if (!accessToken) return;
+  
+  // 1. Create metadata
+  const metaRes = await fetch('https://www.googleapis.com/drive/v3/files', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      name: 'tasks.json',
+      parents: ['appDataFolder']
+    })
+  });
+  
+  if (!metaRes.ok) throw new Error('Failed to create file metadata');
+  const meta = await metaRes.json();
+  googleFileId = meta.id;
+  
+  // 2. Upload file contents
+  await syncTasksToGoogleDrive();
+}
+
+async function syncTasksToGoogleDrive() {
+  if (!accessToken || !googleFileId) return;
+  
+  showSyncState('syncing', 'Saving to cloud...');
+  try {
+    const uploadRes = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${googleFileId}?uploadType=media`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(tasks)
+    });
+    
+    if (!uploadRes.ok) throw new Error('Cloud save failed');
+    showSyncState('live', 'Saved to Drive');
+  } catch(e) {
+    console.error(e);
+    showSyncState('error', 'Cloud sync failed');
+    showToast('Failed to save to Google Drive.', 'warning');
+  }
+}
+
+/* Google Calendar Sync Implementation */
+async function syncCalendarEvents() {
+  if (!accessToken) {
+    showToast('Please connect your Google Account first!', 'warning');
+    handleAuthClick();
+    return;
+  }
+  
+  const btn = document.getElementById('sync-btn');
+  btn.classList.add('syncing');
+  btn.disabled = true;
+  showSyncState('syncing', 'Syncing calendar...');
+  
+  try {
+    const timeMin = new Date().toISOString();
+    // Get primary calendar events (30 days ahead)
+    const url = `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${encodeURIComponent(timeMin)}&maxResults=80&orderBy=startTime&singleEvents=true`;
+    
+    const res = await fetch(url, {
+      headers: { 'Authorization': `Bearer ${accessToken}` }
+    });
+    
+    if (!res.ok) throw new Error('Calendar fetch error');
+    
+    const data = await res.json();
+    const newDeadlines = [];
+    
+    // Filter and process events (keyword matching)
+    (data.items || []).forEach(evt => {
+      const title = evt.summary || 'Untitled Event';
+      const dateStr = evt.start.date || (evt.start.dateTime ? evt.start.dateTime.slice(0, 10) : null);
+      if (!dateStr) return;
+      
+      const titleLower = title.toLowerCase();
+      let type = '';
+      
+      if (titleLower.includes('exam') || titleLower.includes('klausur') || titleLower.includes('prüfung')) {
+        type = 'exam';
+      } else if (titleLower.includes('submission') || titleLower.includes('abgabe') || titleLower.includes('deliverable')) {
+        type = 'submission';
+      } else if (titleLower.includes('deadline') || titleLower.includes('frist') || titleLower.includes('due')) {
+        type = 'deadline';
+      } else {
+        // Skip events that are just regular calendar invite meetings
+        return;
+      }
+      
+      newDeadlines.push({ title, date: dateStr, type });
+    });
+    
+    deadlines = newDeadlines;
+    localStorage.setItem('cached_deadlines', JSON.stringify(deadlines));
+    
+    showSyncState('live', 'Calendar synced');
+    renderAll();
+    showToast('Deadlines loaded from Google Calendar!');
+  } catch (e) {
+    console.error(e);
+    showSyncState('error', 'Calendar sync failed');
+    showToast('Failed to sync calendar.', 'danger');
+  } finally {
+    btn.classList.remove('syncing');
+    btn.disabled = false;
+  }
+}
+
+/* Write Event directly to Google Calendar */
+async function submitBlockTime() {
+  if (!accessToken) return;
+  
+  const title = document.getElementById('block-event-title').value.trim();
+  const dateStr = document.getElementById('block-date').value;
+  const start = document.getElementById('block-start').value;
+  const end = document.getElementById('block-end').value;
+  const calendarId = document.getElementById('block-calendar-id').value;
+  
+  if (!title || !dateStr || !start || !end) {
+    showToast('Please fill out all fields.', 'warning');
+    return;
+  }
+  
+  const submitBtn = document.getElementById('block-submit-btn');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Scheduling...';
+  
+  try {
+    // Construct request payload
+    const eventPayload = {
+      summary: title,
+      description: `Focus Block scheduled via Ashu's Dashboard for the deadline: ${document.getElementById('block-deadline-title').value}`,
+      start: {
+        dateTime: `${dateStr}T${start}:00`,
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      },
+      end: {
+        dateTime: `${dateStr}T${end}:00`,
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      }
+    };
+    
+    const url = `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(eventPayload)
+    });
+    
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error?.message || 'Failed to create event');
+    }
+    
+    showToast('Focus Block added to Calendar!', 'success');
+    closeBlockModal();
+  } catch(e) {
+    console.error(e);
+    showToast(`Error: ${e.message}`, 'danger');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Schedule on Google';
+  }
+}
+
+// Initial Load
+loadInitialData();
+</script>
+</body>
+</html>
