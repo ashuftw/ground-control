@@ -443,7 +443,43 @@
     color: var(--text-muted);
     font-weight: 600;
     margin-bottom: 1rem;
+    min-height: 0.9rem;
   }
+
+  .palette-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .palette-title { min-width: 0; flex: 1; }
+
+  .palette-actions {
+    display: flex;
+    gap: 0.2rem;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .hiwi:hover .palette-actions { opacity: 1; }
+
+  .palette-actions .p-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0.15rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    transition: color 0.2s, background 0.2s;
+  }
+
+  .palette-actions .p-btn:hover { color: var(--text); background: var(--bg-hover); }
+  .palette-actions .p-del:hover { color: var(--danger-text); }
 
   .horizon {
     margin-bottom: 0.85rem;
@@ -1078,14 +1114,15 @@
 
   <!-- Deadlines Section -->
   <div class="section-title">
-    <span>Deadlines & Exams</span>
+    <span>Deadlines</span>
     <button class="btn" id="add-deadline-btn" onclick="openAddDeadlineModal()" style="display: none; padding: 0.25rem 0.5rem; font-size: 0.75rem;">+ Add</button>
   </div>
   <div class="deadlines" id="deadlines"></div>
 
-  <!-- HiWi Tasks Section -->
+  <!-- Palettes Section -->
   <div class="section-title">
-    <span>Work & Research Labs</span>
+    <span>Palettes</span>
+    <button class="btn" onclick="openPaletteModal()" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">+ Add palette</button>
   </div>
   <div class="hiwis" id="hiwis"></div>
 
@@ -1129,6 +1166,30 @@
     <div class="modal-footer">
       <button class="btn" onclick="closeDeadlineModal()">Cancel</button>
       <button class="btn btn-primary" id="deadline-submit-btn" onclick="submitDeadline()">Add Deadline</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add / Edit Palette Modal -->
+<div class="modal-overlay" id="modal-palette">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="palette-modal-title">Add Palette</h3>
+      <button class="modal-close" onclick="closePaletteModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="palette-name">Name</label>
+        <input type="text" id="palette-name" placeholder="e.g. University A" onkeydown="if(event.key==='Enter')submitPalette()" />
+      </div>
+      <div class="form-group">
+        <label for="palette-subtitle">Subtitle <span style="text-transform:none;font-weight:400;">(optional)</span></label>
+        <input type="text" id="palette-subtitle" placeholder="e.g. Lab Assistant" onkeydown="if(event.key==='Enter')submitPalette()" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closePaletteModal()">Cancel</button>
+      <button class="btn btn-primary" id="palette-submit-btn" onclick="submitPalette()">Add Palette</button>
     </div>
   </div>
 </div>
@@ -1201,6 +1262,7 @@ function safeSessionRemoveItem(key) {
 }
 
 const STORAGE_KEY = 'hiwi-tasks-v1';
+const PALETTES_KEY = 'cached_palettes';
 const ICON_PLUS  = '<svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>';
 const ICON_CHECK = '<svg class="icon" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>';
 const ICON_X     = '<svg class="icon" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>';
@@ -1213,9 +1275,10 @@ const HORIZONS = [
   { id: 'backlog', label: 'Backlog' },
 ];
 
-const HIWIS = [
-  { id: 'tubs', name: 'University A', loc: 'Lab Assistant' },
-  { id: 'tub', name: 'University B', loc: 'Research Assistant · remote' },
+// Starter palettes seeded for brand-new users — fully editable afterwards.
+const defaultPalettes = [
+  { id: 'tubs', name: 'University A', subtitle: 'Lab Assistant' },
+  { id: 'tub', name: 'University B', subtitle: 'Research Assistant · remote' },
 ];
 
 const defaultTasks = {
@@ -1256,11 +1319,18 @@ function initSupabaseClient() {
 }
 
 // State variables
+let palettes = JSON.parse(JSON.stringify(defaultPalettes));
 let tasks = JSON.parse(JSON.stringify(defaultTasks));
 let deadlines = [];
 let currentUser = null;
 let editingTaskId = null;
 let editingDeadlineId = null;
+let editingPaletteId = null;
+
+// An empty four-horizon task bucket for a palette.
+function emptyHorizons() {
+  return { today: [], next: [], pending: [], backlog: [] };
+}
 
 // Initialize today's date
 document.getElementById('today-str').textContent =
@@ -1284,7 +1354,15 @@ function saveTasksLocally() {
 async function loadInitialData() {
   // Load local tasks first (fallback / offline preview)
   tasks = loadTasks();
-  
+
+  // Load local palettes (offline preview; replaced by cloud copy on login)
+  try {
+    const cp = safeGetItem(PALETTES_KEY);
+    palettes = cp ? JSON.parse(cp) : JSON.parse(JSON.stringify(defaultPalettes));
+  } catch (e) {
+    palettes = JSON.parse(JSON.stringify(defaultPalettes));
+  }
+
   // Load cached deadlines
   try {
     const cached = safeGetItem('cached_deadlines');
@@ -1408,31 +1486,174 @@ function renderDeadlines() {
 }
 
 // Render HiWi columns
-function renderHiwis() {
-  document.getElementById('hiwis').innerHTML = HIWIS.map(h => {
-    const data = tasks[h.id] || { today: [], next: [], pending: [], backlog: [] };
+function renderPalettes() {
+  const el = document.getElementById('hiwis');
+  if (!palettes.length) {
+    el.innerHTML = '<div class="empty" style="grid-column: 1 / -1;">No palettes yet. Click "+ Add palette" to create one.</div>';
+    return;
+  }
+  el.innerHTML = palettes.map(p => {
+    const data = tasks[p.id] || emptyHorizons();
     const horizons = HORIZONS.map(hz => {
       const list = data[hz.id] || [];
-      const items = list.length ? list.map(t => taskRow(h.id, hz.id, t)).join('')
+      const items = list.length ? list.map(t => taskRow(p.id, hz.id, t)).join('')
         : `<div class="empty">nothing here</div>`;
       return `<div class="horizon"><div class="h-lbl">${hz.label}</div>${items}</div>`;
     }).join('');
     return `<div class="hiwi">
-      <h3>${h.name}</h3><div class="loc">${h.loc}</div>
+      <div class="palette-head">
+        <div class="palette-title">
+          <h3>${esc(p.name)}</h3>
+          ${p.subtitle ? `<div class="loc">${esc(p.subtitle)}</div>` : '<div class="loc"></div>'}
+        </div>
+        <div class="palette-actions">
+          <button class="p-btn" onclick="openEditPaletteModal('${p.id}')" title="Edit palette">${ICON_PENCIL}</button>
+          <button class="p-btn p-del" onclick="deletePalette('${p.id}')" title="Delete palette">${ICON_X}</button>
+        </div>
+      </div>
       <div style="flex: 1;">${horizons}</div>
       <div class="add-row">
-        <button class="add-toggle" onclick="toggleAdd('${h.id}')">${ICON_PLUS} Add task</button>
-        <div class="add-form" id="form-${h.id}">
-          <input type="text" id="input-${h.id}" placeholder="Task description" onkeydown="if(event.key==='Enter')addTask('${h.id}')" />
-          <select id="hz-${h.id}">${HORIZONS.map(x=>`<option value="${x.id}">${x.label}</option>`).join('')}</select>
+        <button class="add-toggle" onclick="toggleAdd('${p.id}')">${ICON_PLUS} Add task</button>
+        <div class="add-form" id="form-${p.id}">
+          <input type="text" id="input-${p.id}" placeholder="Task description" onkeydown="if(event.key==='Enter')addTask('${p.id}')" />
+          <select id="hz-${p.id}">${HORIZONS.map(x=>`<option value="${x.id}">${x.label}</option>`).join('')}</select>
           <div class="btns">
-            <button class="confirm" onclick="addTask('${h.id}')">Add</button>
-            <button class="cancel" onclick="toggleAdd('${h.id}')">Cancel</button>
+            <button class="confirm" onclick="addTask('${p.id}')">Add</button>
+            <button class="cancel" onclick="toggleAdd('${p.id}')">Cancel</button>
           </div>
         </div>
       </div>
     </div>`;
   }).join('');
+}
+
+/* Palettes — user-editable task boards */
+function savePalettesLocally() {
+  safeSetItem(PALETTES_KEY, JSON.stringify(palettes));
+}
+
+async function loadPalettes() {
+  if (currentUser) {
+    try {
+      const { data, error } = await sbClient
+        .from('palettes')
+        .select('*')
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      if (data && data.length) {
+        palettes = data.map(p => ({ id: p.id, name: p.name, subtitle: p.subtitle || '' }));
+      } else {
+        // Brand-new user: seed the starter palettes into the cloud (empty boards).
+        palettes = [];
+        for (const dp of defaultPalettes) {
+          const { data: ins } = await sbClient.from('palettes')
+            .insert([{ user_id: currentUser.id, name: dp.name, subtitle: dp.subtitle }]).select();
+          if (ins && ins[0]) palettes.push({ id: ins[0].id, name: ins[0].name, subtitle: ins[0].subtitle || '' });
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      palettes = JSON.parse(JSON.stringify(defaultPalettes)); // graceful fallback
+    }
+  } else {
+    try {
+      const cached = safeGetItem(PALETTES_KEY);
+      palettes = cached ? JSON.parse(cached) : JSON.parse(JSON.stringify(defaultPalettes));
+    } catch (e) {
+      palettes = JSON.parse(JSON.stringify(defaultPalettes));
+    }
+  }
+}
+
+function openPaletteModal() {
+  editingPaletteId = null;
+  document.getElementById('palette-name').value = '';
+  document.getElementById('palette-subtitle').value = '';
+  document.getElementById('palette-modal-title').textContent = 'Add Palette';
+  document.getElementById('palette-submit-btn').textContent = 'Add Palette';
+  document.getElementById('modal-palette').classList.add('open');
+  document.getElementById('palette-name').focus();
+}
+
+function openEditPaletteModal(id) {
+  const p = palettes.find(x => x.id === id);
+  if (!p) return;
+  editingPaletteId = id;
+  document.getElementById('palette-name').value = p.name;
+  document.getElementById('palette-subtitle').value = p.subtitle || '';
+  document.getElementById('palette-modal-title').textContent = 'Edit Palette';
+  document.getElementById('palette-submit-btn').textContent = 'Save Changes';
+  document.getElementById('modal-palette').classList.add('open');
+  document.getElementById('palette-name').focus();
+}
+
+function closePaletteModal() {
+  document.getElementById('modal-palette').classList.remove('open');
+}
+
+async function submitPalette() {
+  const name = document.getElementById('palette-name').value.trim();
+  const subtitle = document.getElementById('palette-subtitle').value.trim();
+  if (!name) { showToast('Please enter a palette name.', 'warning'); return; }
+
+  // Edit mode
+  if (editingPaletteId) {
+    const id = editingPaletteId;
+    editingPaletteId = null;
+    const p = palettes.find(x => x.id === id);
+    if (p) { p.name = name; p.subtitle = subtitle; }
+    renderPalettes();
+    closePaletteModal();
+    if (currentUser) {
+      try { await sbClient.from('palettes').update({ name, subtitle }).eq('id', id); }
+      catch (e) { console.error(e); showToast('Failed to save to cloud', 'warning'); }
+    } else {
+      savePalettesLocally();
+    }
+    return;
+  }
+
+  // Add mode
+  closePaletteModal();
+  if (currentUser) {
+    try {
+      const { data, error } = await sbClient.from('palettes')
+        .insert([{ user_id: currentUser.id, name, subtitle }]).select();
+      if (error) throw error;
+      palettes.push({ id: data[0].id, name, subtitle });
+      tasks[data[0].id] = emptyHorizons();
+      renderAll();
+    } catch (e) {
+      console.error(e);
+      showToast('Failed to save to cloud', 'warning');
+    }
+  } else {
+    const np = { id: 'p' + Math.random().toString(36).slice(2, 9), name, subtitle };
+    palettes.push(np);
+    tasks[np.id] = emptyHorizons();
+    savePalettesLocally();
+    saveTasksLocally();
+    renderAll();
+  }
+}
+
+async function deletePalette(id) {
+  const p = palettes.find(x => x.id === id);
+  if (!p) return;
+  if (!confirm('Delete the palette "' + p.name + '" and all its tasks? This cannot be undone.')) return;
+  palettes = palettes.filter(x => x.id !== id);
+  delete tasks[id];
+  renderAll();
+  if (currentUser) {
+    try {
+      await sbClient.from('tasks').delete().eq('hiwi_id', id);
+      await sbClient.from('palettes').delete().eq('id', id);
+    } catch (e) { console.error(e); }
+  } else {
+    savePalettesLocally();
+    saveTasksLocally();
+  }
+  showToast('Palette deleted!', 'success');
 }
 
 function taskRow(hiwiId, hzId, t) {
@@ -1454,14 +1675,14 @@ function taskRow(hiwiId, hzId, t) {
 
 function startEditTask(h, hz, id) {
   editingTaskId = id;
-  renderHiwis();
+  renderPalettes();
   const inp = document.getElementById('edit-' + id);
   if (inp) { inp.focus(); inp.select(); }
 }
 
 function cancelTaskEdit() {
   editingTaskId = null;
-  renderHiwis();
+  renderPalettes();
 }
 
 async function saveTaskEdit(h, hz, id) {
@@ -1469,9 +1690,9 @@ async function saveTaskEdit(h, hz, id) {
   const inp = document.getElementById('edit-' + id);
   const t = tasks[h] && tasks[h][hz] && tasks[h][hz].find(x => x.id === id);
   editingTaskId = null;
-  if (!inp || !t) { renderHiwis(); return; }
+  if (!inp || !t) { renderPalettes(); return; }
   const newText = inp.value.trim();
-  if (!newText || newText === t.text) { renderHiwis(); return; } // empty or unchanged -> no-op
+  if (!newText || newText === t.text) { renderPalettes(); return; } // empty or unchanged -> no-op
   t.text = newText;
   renderAll();
 
@@ -1576,7 +1797,7 @@ async function delTask(h, hz, id){
 function renderAll() {
   renderMetrics();
   renderDeadlines();
-  renderHiwis();
+  renderPalettes();
 }
 
 /* Toast System */
@@ -1717,6 +1938,7 @@ let snapshots = [];
 function buildSnapshotData() {
   // Deep copy so later edits don't mutate the stored snapshot
   return {
+    palettes: JSON.parse(JSON.stringify(palettes)),
     tasks: JSON.parse(JSON.stringify(tasks)),
     deadlines: JSON.parse(JSON.stringify(deadlines))
   };
@@ -1830,7 +2052,7 @@ async function getSnapshotData(id) {
 }
 
 async function restoreSnapshot(id) {
-  if (!confirm('Restore this snapshot? Your current tasks and deadlines will be replaced. (A backup of your current state is saved first, so you can undo.)')) return;
+  if (!confirm('Restore this snapshot? Your current palettes, tasks and deadlines will be replaced. (A backup of your current state is saved first, so you can undo.)')) return;
 
   let data;
   try {
@@ -1847,6 +2069,7 @@ async function restoreSnapshot(id) {
   await saveSnapshot('Auto-backup before restore · ' + stamp, true);
 
   // Apply the snapshot to the in-memory state and screen.
+  palettes = JSON.parse(JSON.stringify(data.palettes || defaultPalettes));
   tasks = JSON.parse(JSON.stringify(data.tasks || {}));
   deadlines = JSON.parse(JSON.stringify(data.deadlines || []));
   renderAll();
@@ -1857,12 +2080,24 @@ async function restoreSnapshot(id) {
       // Replace the cloud copy: wipe this user's rows, then re-insert from the snapshot.
       await sbClient.from('tasks').delete().eq('user_id', currentUser.id);
       await sbClient.from('deadlines').delete().eq('user_id', currentUser.id);
+      await sbClient.from('palettes').delete().eq('user_id', currentUser.id);
 
+      // Re-insert palettes (DB assigns fresh ids); map each old palette id -> new id.
+      const idMap = {};
+      for (const p of palettes) {
+        const { data: ins, error } = await sbClient.from('palettes')
+          .insert([{ user_id: currentUser.id, name: p.name, subtitle: p.subtitle || '' }]).select();
+        if (!error && ins && ins[0]) idMap[p.id] = ins[0].id;
+      }
+
+      // Re-insert tasks, pointing hiwi_id at the new palette ids.
       const taskRows = [];
-      Object.keys(tasks).forEach(hiwiId => {
-        Object.keys(tasks[hiwiId]).forEach(hzId => {
-          (tasks[hiwiId][hzId] || []).forEach(t => {
-            taskRows.push({ user_id: currentUser.id, hiwi_id: hiwiId, horizon_id: hzId, text: t.text, done: !!t.done });
+      Object.keys(tasks).forEach(oldPid => {
+        const newPid = idMap[oldPid];
+        if (!newPid) return; // palette not in snapshot — skip its tasks
+        Object.keys(tasks[oldPid]).forEach(hzId => {
+          (tasks[oldPid][hzId] || []).forEach(t => {
+            taskRows.push({ user_id: currentUser.id, hiwi_id: newPid, horizon_id: hzId, text: t.text, done: !!t.done });
           });
         });
       });
@@ -1871,7 +2106,8 @@ async function restoreSnapshot(id) {
       if (taskRows.length) await sbClient.from('tasks').insert(taskRows);
       if (deadlineRows.length) await sbClient.from('deadlines').insert(deadlineRows);
 
-      // Re-fetch so local ids match the new DB rows.
+      // Re-fetch so in-memory ids match the new DB rows.
+      await loadPalettes();
       await fetchTasksFromSupabase();
       await fetchDeadlinesFromSupabase();
       showSyncState('live', 'Cloud Synced');
@@ -1881,6 +2117,7 @@ async function restoreSnapshot(id) {
       showToast('Restore saved locally but cloud sync failed.', 'warning');
     }
   } else {
+    savePalettesLocally();
     saveTasksLocally();
     safeSetItem('cached_deadlines', JSON.stringify(deadlines));
   }
@@ -1961,7 +2198,9 @@ async function handleLogout() {
   safeRemoveItem('cached_deadlines');
   safeRemoveItem(STORAGE_KEY);
   safeRemoveItem(SNAPSHOTS_KEY);
+  safeRemoveItem(PALETTES_KEY);
   tasks = JSON.parse(JSON.stringify(defaultTasks));
+  palettes = JSON.parse(JSON.stringify(defaultPalettes));
   deadlines = [];
   snapshots = [];
 
@@ -1981,6 +2220,7 @@ async function onLoginSuccess() {
   
   showSyncState('syncing', 'Syncing cloud...');
   try {
+    await loadPalettes();
     await fetchTasksFromSupabase();
     await fetchDeadlinesFromSupabase();
     await loadSnapshots();
@@ -2050,9 +2290,11 @@ async function fetchTasksFromSupabase() {
     .select('*');
   
   if (!error && data) {
-    const newTasks = JSON.parse(JSON.stringify(defaultTasks));
+    const newTasks = {};
+    palettes.forEach(p => { newTasks[p.id] = emptyHorizons(); });
     data.forEach(t => {
-      if (newTasks[t.hiwi_id] && newTasks[t.hiwi_id][t.horizon_id]) {
+      if (!newTasks[t.hiwi_id]) newTasks[t.hiwi_id] = emptyHorizons();
+      if (newTasks[t.hiwi_id][t.horizon_id]) {
         newTasks[t.hiwi_id][t.horizon_id].push({
           id: t.id,
           text: t.text,
