@@ -560,6 +560,38 @@
     color: var(--danger);
   }
 
+  .task .edit {
+    opacity: 0;
+    color: var(--text-muted);
+    cursor: pointer;
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    padding: 0 0.2rem;
+    transition: opacity 0.2s, color 0.2s;
+  }
+
+  .task:hover .edit {
+    opacity: 1;
+  }
+
+  .task .edit:hover {
+    color: var(--primary);
+  }
+
+  .task-edit {
+    flex: 1;
+    min-width: 0;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid var(--primary);
+    border-radius: var(--radius-sm);
+    background: var(--bg-card);
+    color: var(--text);
+    font-size: 0.85rem;
+    font-family: var(--font-body);
+    outline: none;
+  }
+
   .add-row {
     margin-top: auto;
     padding-top: 0.5rem;
@@ -1138,7 +1170,7 @@
 <div class="modal-overlay" id="modal-deadline">
   <div class="modal">
     <div class="modal-header">
-      <h3>Add Deadline / Exam</h3>
+      <h3 id="deadline-modal-title">Add Deadline / Exam</h3>
       <button class="modal-close" onclick="closeDeadlineModal()">&times;</button>
     </div>
     <div class="modal-body">
@@ -1195,22 +1227,22 @@
 <!-- Supabase Client SDK (async so a slow/blocked CDN can never freeze the page) -->
 <script id="sb-cdn" async src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+// Non-destructive global error reporting: log full detail to the console, and
+// surface a brief, dismissible toast — never wipe the page out from under the user.
+function reportGlobalError(detail) {
+  console.error(detail);
+  try {
+    if (typeof showToast === 'function') {
+      showToast('Something went wrong. Your data is safe — try again.', 'danger');
+    }
+  } catch (e) { /* toast unavailable this early; console already has it */ }
+}
 window.onerror = function(message, source, lineno, colno, error) {
-  document.body.innerHTML = `<div style="color: #ef4444; background: #fee2e2; border: 1px solid #fca5a5; padding: 2rem; margin: 2rem; border-radius: 8px; font-family: monospace;">
-    <h2 style="margin-bottom: 0.5rem;">⚠️ Runtime Error Captured</h2>
-    <p><strong>Message:</strong> ${message}</p>
-    <p><strong>Source:</strong> ${source} (Line ${lineno}:${colno})</p>
-    <pre style="margin-top: 1rem; padding: 1rem; background: #fff; border-radius: 4px; overflow-x: auto;">${error ? error.stack : ''}</pre>
-  </div>`;
+  reportGlobalError(error || (message + ' @ ' + source + ':' + lineno + ':' + colno));
   return false;
 };
 window.onunhandledrejection = function(event) {
-  const reason = event.reason;
-  document.body.innerHTML = `<div style="color: #ef4444; background: #fee2e2; border: 1px solid #fca5a5; padding: 2rem; margin: 2rem; border-radius: 8px; font-family: monospace;">
-    <h2 style="margin-bottom: 0.5rem;">⚠️ Unhandled Promise Rejection Captured</h2>
-    <p><strong>Reason:</strong> ${reason ? (reason.message || reason) : 'Unknown reason'}</p>
-    <pre style="margin-top: 1rem; padding: 1rem; background: #fff; border-radius: 4px; overflow-x: auto;">${reason && reason.stack ? reason.stack : ''}</pre>
-  </div>`;
+  reportGlobalError(event.reason || 'Unhandled promise rejection');
 };
 
 // Safe Local/Session Storage wrappers (resilient to browser blocking / Private Mode)
@@ -1237,6 +1269,7 @@ const STORAGE_KEY = 'hiwi-tasks-v1';
 const ICON_PLUS  = '<svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>';
 const ICON_CHECK = '<svg class="icon" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>';
 const ICON_X     = '<svg class="icon" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+const ICON_PENCIL= '<svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>';
 
 const HORIZONS = [
   { id: 'today', label: 'Today' },
@@ -1291,6 +1324,8 @@ function initSupabaseClient() {
 let tasks = JSON.parse(JSON.stringify(defaultTasks));
 let deadlines = [];
 let currentUser = null;
+let editingTaskId = null;
+let editingDeadlineId = null;
 
 // Initialize today's date
 document.getElementById('today-str').textContent =
@@ -1429,7 +1464,10 @@ function renderDeadlines() {
       <div class="body"><div class="t">${esc(d.title)}</div><div class="d">${dateFmt} · ${esc(d.type||'')}</div>
         <div class="bar"><span style="width:${pct}%"></span></div>
       </div>
-      <button class="btn btn-logout" onclick="deleteDeadline('${d.id}')" style="align-self: center; margin-left: auto; width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center;" title="Delete deadline">${ICON_X}</button>
+      <div style="display: flex; gap: 0.3rem; align-self: center; margin-left: auto;">
+        <button class="btn" onclick="openEditDeadlineModal('${d.id}')" style="width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center;" title="Edit deadline">${ICON_PENCIL}</button>
+        <button class="btn btn-logout" onclick="deleteDeadline('${d.id}')" style="width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center;" title="Delete deadline">${ICON_X}</button>
+      </div>
     </div>`;
   }).join('');
 }
@@ -1463,11 +1501,55 @@ function renderHiwis() {
 }
 
 function taskRow(hiwiId, hzId, t) {
+  if (t.id === editingTaskId) {
+    return `<div class="task">
+      <div class="check ${t.done?'done':''}">${t.done?ICON_CHECK:''}</div>
+      <input class="task-edit" id="edit-${t.id}" value="${esc(t.text)}"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();saveTaskEdit('${hiwiId}','${hzId}','${t.id}')}else if(event.key==='Escape'){cancelTaskEdit()}"
+        onblur="saveTaskEdit('${hiwiId}','${hzId}','${t.id}')" />
+    </div>`;
+  }
   return `<div class="task ${t.done?'complete':''}">
     <div class="check ${t.done?'done':''}" onclick="toggleTask('${hiwiId}','${hzId}','${t.id}')">${t.done?ICON_CHECK:''}</div>
-    <div class="txt">${esc(t.text)}</div>
-    <button class="del" onclick="delTask('${hiwiId}','${hzId}','${t.id}')">${ICON_X}</button>
+    <div class="txt" ondblclick="startEditTask('${hiwiId}','${hzId}','${t.id}')">${esc(t.text)}</div>
+    <button class="edit" onclick="startEditTask('${hiwiId}','${hzId}','${t.id}')" title="Edit">${ICON_PENCIL}</button>
+    <button class="del" onclick="delTask('${hiwiId}','${hzId}','${t.id}')" title="Delete">${ICON_X}</button>
   </div>`;
+}
+
+function startEditTask(h, hz, id) {
+  editingTaskId = id;
+  renderHiwis();
+  const inp = document.getElementById('edit-' + id);
+  if (inp) { inp.focus(); inp.select(); }
+}
+
+function cancelTaskEdit() {
+  editingTaskId = null;
+  renderHiwis();
+}
+
+async function saveTaskEdit(h, hz, id) {
+  if (editingTaskId !== id) return; // guard against blur firing after Enter/Escape
+  const inp = document.getElementById('edit-' + id);
+  const t = tasks[h] && tasks[h][hz] && tasks[h][hz].find(x => x.id === id);
+  editingTaskId = null;
+  if (!inp || !t) { renderHiwis(); return; }
+  const newText = inp.value.trim();
+  if (!newText || newText === t.text) { renderHiwis(); return; } // empty or unchanged -> no-op
+  t.text = newText;
+  renderAll();
+
+  if (currentUser) {
+    try {
+      await sbClient.from('tasks').update({ text: newText }).eq('id', id);
+    } catch (e) {
+      console.error(e);
+      showToast('Failed to save edit to cloud', 'warning');
+    }
+  } else {
+    saveTasksLocally();
+  }
 }
 
 function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -1586,8 +1668,24 @@ function showSyncState(cls, txt) {
 /* Modals Management */
 // Deadline Modal
 function openAddDeadlineModal() {
+  editingDeadlineId = null;
   document.getElementById('deadline-title').value = '';
   document.getElementById('deadline-date').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('deadline-type').value = 'deadline';
+  document.getElementById('deadline-modal-title').textContent = 'Add Deadline / Exam';
+  document.getElementById('deadline-submit-btn').textContent = 'Add Deadline';
+  document.getElementById('modal-deadline').classList.add('open');
+}
+
+function openEditDeadlineModal(id) {
+  const d = deadlines.find(x => x.id === id);
+  if (!d) return;
+  editingDeadlineId = id;
+  document.getElementById('deadline-title').value = d.title;
+  document.getElementById('deadline-date').value = d.date;
+  document.getElementById('deadline-type').value = d.type || 'deadline';
+  document.getElementById('deadline-modal-title').textContent = 'Edit Deadline';
+  document.getElementById('deadline-submit-btn').textContent = 'Save Changes';
   document.getElementById('modal-deadline').classList.add('open');
 }
 
@@ -1599,12 +1697,34 @@ async function submitDeadline() {
   const title = document.getElementById('deadline-title').value.trim();
   const dateStr = document.getElementById('deadline-date').value;
   const type = document.getElementById('deadline-type').value;
-  
+
   if (!title || !dateStr || !type) {
     showToast('Please fill in all fields.', 'warning');
     return;
   }
-  
+
+  // Edit mode: update the existing deadline instead of creating a new one.
+  if (editingDeadlineId) {
+    const id = editingDeadlineId;
+    editingDeadlineId = null;
+    const d = deadlines.find(x => x.id === id);
+    if (d) { d.title = title; d.date = dateStr; d.type = type; }
+    renderAll();
+    closeDeadlineModal();
+
+    if (currentUser) {
+      try {
+        await sbClient.from('deadlines').update({ title, date: dateStr, type }).eq('id', id);
+      } catch (e) {
+        console.error(e);
+        showToast('Failed to save to cloud', 'warning');
+      }
+    } else {
+      safeSetItem('cached_deadlines', JSON.stringify(deadlines));
+    }
+    return;
+  }
+
   const tempId = 'd' + Math.random().toString(36).slice(2, 9);
   const newDeadline = { id: tempId, title, date: dateStr, type };
   deadlines.push(newDeadline);

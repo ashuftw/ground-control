@@ -1,149 +1,118 @@
 # Study & Research Dashboard
 
-A secure, private, and lightweight productivity dashboard for managing university tasks, deadlines, and schedule focus blocks.
+A lightweight, private productivity dashboard for managing university tasks, deadlines, and exams — with passwordless sign-in and cloud sync across devices.
 
-This project is built as a **Bring Your Own Backend (BYOB)** single-page application. It stores your tasks in a private, hidden folder on your own Google Drive and communicates directly with your Google Calendar to sync deadlines and write scheduled focus blocks. 
+**Live:** https://ashuftw.github.io/ground-control/
 
-*Zero databases to manage, zero hosting costs, and absolute data privacy.*
-
----
-
-## Architecture Overview
-
-```
-                     ┌──────────────────┐
-                     │   Your Browser   │
-                     │  (Dashboard UI)  │
-                     └─┬──────────────┬─┘
-                       │              │
-                       ▼              ▼
-             ┌─────────────────┐    ┌─────────────────┐
-             │  Google Drive   │    │ Google Calendar │
-             │  AppData Folder │    │   Events API    │
-             │  (tasks.json)   │    │ (Read Deadlines │
-             │                 │    │  Write Blocks)  │
-             └─────────────────┘    └─────────────────┘
-```
-
-* **Frontend**: Pure HTML5, CSS3, and JavaScript served locally.
-* **Authentication**: Google Identity Services (OAuth 2.0 Client-side Flow).
-* **Storage**: Read/write access to Google Drive's hidden `appDataFolder` to store your personal `tasks.json` data.
-* **Calendar Integration**: Google Calendar API to automatically sync deadlines/exams and schedule time-blocks.
-
----
-
-## Quick Start (Local Run)
-
-Google OAuth requires the dashboard to be loaded from an HTTP server (`http://localhost:8000`) rather than directly opening the file in your browser (`file://...`).
-
-1. Open your terminal in this directory.
-2. Run a simple local HTTP server:
-   ```bash
-   npx -y http-server -p 8000
-   ```
-3. Open **[http://localhost:8000](http://localhost:8000)** in your web browser.
-4. Keep the server running in the background while using the dashboard.
-
----
-
-## Detailed Google Cloud Integration Setup
-
-To connect Google Calendar & Google Drive, you need to create your own free OAuth credentials in the Google Cloud Console.
-
-### Step 1: Create a Google Cloud Project
-1. Open the [Google Cloud Console](https://console.cloud.google.com/).
-2. Click the project dropdown in the top-left corner and click **New Project**.
-3. Name it `Study Dashboard` and click **Create**.
-
-### Step 2: Enable APIs
-You need to enable access to Google Calendar and Google Drive for this project:
-1. In the top search bar, search for **Google Calendar API** and click **Enable**.
-2. Next, search for **Google Drive API** and click **Enable**.
-
-### Step 3: Configure the OAuth Consent Screen
-1. Go to **APIs & Services** &rarr; **OAuth consent screen** in the sidebar.
-2. Select **External** as the user type and click **Create**.
-3. Fill in the basic application info:
-   * **App name**: `Study Dashboard`
-   * **User support email**: *Your Gmail address*
-   * **Developer contact information**: *Your Gmail address*
-4. Click **Save and Continue**.
-5. In the **Scopes** tab, click **Add or Remove Scopes**. Add the following scopes:
-   * `https://www.googleapis.com/auth/calendar.events` (To read deadlines and write new events)
-   * `https://www.googleapis.com/auth/drive.appdata` (To store `tasks.json` in your private Drive folder)
-6. In the **Test users** tab, click **Add Users** and add your Gmail address. *Note: Only email addresses added here can log into your application while it's in testing mode.*
-7. Click **Save and Continue**.
-
-### Step 4: Create OAuth Client Credentials
-1. Go to **APIs & Services** &rarr; **Credentials** in the sidebar.
-2. Click **Create Credentials** at the top and select **OAuth client ID**.
-3. Set **Application type** to **Web application**.
-4. In the **Authorized JavaScript origins** section, click **Add URI** and enter:
-   `http://localhost:8000`
-5. Click **Create**.
-6. Copy the generated **Client ID** (it looks like `xxxxxxxx-xxxxxxxx.apps.googleusercontent.com`).
-
-### Step 5: Save & Connect the Dashboard
-1. Go to your dashboard at `http://localhost:8000`.
-2. Click the **Settings** gear icon in the top right.
-3. Paste your copied **Client ID** into the settings field and click **Save & Connect**.
-4. Log into your Google Account through the popup window and consent to the permissions.
-5. The connection state will change from **Local Mode** to **Google Synced**!
-
----
-
-## 🌐 Deploying as a Public Website (Plug-and-Play Login)
-
-You can host this dashboard online so that you (and anyone else) can access it from anywhere by simply clicking **Connect Google Account**—without having to do any Google Cloud Console configuration!
-
-Because it is a frontend-only app, user data stays 100% private. Their tasks are saved in *their own* Google Drive, and their deadlines are fetched from *their own* Google Calendar.
-
-### Setup Steps:
-
-1. **Deploy the Files**:
-   * Upload `index.html` to a free static hosting service like GitHub Pages, Vercel, Netlify, or your own server.
-   * Note the public URL (e.g., `https://your-username.github.io/dashboard`).
-
-2. **Register a Single Google OAuth Client ID**:
-   * Open the [Google Cloud Console](https://console.cloud.google.com/).
-   * Select your project, go to **Credentials**, and edit or create a **Web application** Client ID.
-   * Under **Authorized JavaScript origins**, add your public URL (e.g., `https://your-username.github.io`).
-   * Copy the generated **Client ID**.
-
-3. **Configure the Default Client ID in Code**:
-   * Open `index.html`.
-   * Find `const DEFAULT_CLIENT_ID = '';` near the top of the script block (around line 958).
-   * Paste your Client ID inside the quotes:
-     ```javascript
-     const DEFAULT_CLIENT_ID = 'your-client-id-here.apps.googleusercontent.com';
-     ```
-   * Save and redeploy.
-
-Now, anyone visiting your website can sign in directly!
+It's a single self-contained `index.html` file backed by [Supabase](https://supabase.com) (free tier). Each user signs in with an email **magic link** and gets their own private data, isolated by row-level security. No passwords, no per-user setup — open the page, enter your email, click the link, done.
 
 ---
 
 ## Features
 
-### 📅 Sync Calendar & Fetch Deadlines
-Clicking **Sync Calendar** searches your Google Calendar events for the next 30 days. It filters events matching keywords such as `exam` (Klausur/Prüfung), `deadline` (Frist/Due), and `submission` (Abgabe) to automatically build your deadlines view.
-
-### ⏰ Write Focus Blocks (Block Time)
-Click **Block time** next to any deadline. A scheduler modal will open. You can edit the focus block name, set the date (defaults to the day before), select your start/end times, and click **Schedule on Google**. The app will create a 2-hour event directly in your Google Calendar.
-
-### 📝 Horizontal Task Boards
-Manage tasks for **University A** and **University B** across four status horizons:
-* **Today**
-* **Next up**
-* **Pending**
-* **Backlog**
+- **📝 Task boards** — manage tasks across labs/areas in four horizons: *Today*, *Next up*, *Pending*, *Backlog*. Add, check off, **edit** (✎ or double-click the text), and delete.
+- **📅 Deadlines & exams** — track due dates with urgency colouring and a countdown bar. Add, **edit** (✎), and delete.
+- **📸 Snapshots** — save a named restore point of your entire state and roll back to it later. Restoring auto-saves a backup first, so it's always undoable. Capped at 30 per user.
+- **🔄 Cloud sync** — everything syncs to your account; use it on any device.
+- **📴 Offline / local mode** — works without signing in; data is kept in the browser's local storage.
 
 ---
 
-## Expanding for Claude (Model Context Protocol / MCP)
+## Architecture
 
-If you want Claude (e.g. Claude Desktop) to read your tasks and help check things off, we can create a companion **MCP (Model Context Protocol) Server** in this directory. 
+```
+        ┌──────────────────┐
+        │   Your Browser   │
+        │  (index.html UI) │
+        └────────┬─────────┘
+                 │  Supabase JS SDK
+                 ▼
+        ┌──────────────────────────────┐
+        │          Supabase            │
+        │  Auth: email magic link      │
+        │  Postgres + Row Level Security│
+        │  Tables: tasks, deadlines,    │
+        │          snapshots            │
+        └──────────────────────────────┘
+```
 
-Claude can load this server locally via stdin/stdout, read the `tasks.json` file synced to your local machine, and let you complete tasks directly from your chat prompt:
-> *"Claude, what are my tasks for University B today?"*
-> *"Claude, I finished documenting and running the code, check it off."*
+- **Frontend**: pure HTML/CSS/JS in one file. The Supabase JS SDK loads from a CDN.
+- **Auth**: Supabase email OTP / magic link (`signInWithOtp`).
+- **Data isolation**: every table has an RLS policy `auth.uid() = user_id`, so users only ever see their own rows. The anon key embedded in the page is public by design — RLS, not the key, is what protects data.
+
+---
+
+## Run it locally
+
+```bash
+python3 -m http.server 8000
+# then open http://localhost:8000
+```
+
+For magic-link login to work locally, add `http://localhost:8000/**` to the Supabase **Redirect URLs** (see below). Without sign-in, the dashboard still runs in offline/local mode.
+
+---
+
+## Backend setup (one-time, by the owner)
+
+The app points at a shared Supabase project. To stand up your own:
+
+1. **Create a project** at [supabase.com](https://supabase.com) (free, no card).
+
+2. **Create the tables + security policies** — run this in the SQL Editor:
+
+   ```sql
+   create table public.tasks (
+     id uuid primary key default gen_random_uuid(),
+     user_id uuid not null references auth.users(id) on delete cascade default auth.uid(),
+     hiwi_id text not null,
+     horizon_id text not null,
+     text text not null,
+     done boolean not null default false,
+     created_at timestamptz not null default now()
+   );
+
+   create table public.deadlines (
+     id uuid primary key default gen_random_uuid(),
+     user_id uuid not null references auth.users(id) on delete cascade default auth.uid(),
+     title text not null,
+     date date not null,
+     type text not null,
+     created_at timestamptz not null default now()
+   );
+
+   create table public.snapshots (
+     id uuid primary key default gen_random_uuid(),
+     user_id uuid not null references auth.users(id) on delete cascade default auth.uid(),
+     label text not null,
+     data jsonb not null,
+     created_at timestamptz not null default now()
+   );
+
+   alter table public.tasks enable row level security;
+   alter table public.deadlines enable row level security;
+   alter table public.snapshots enable row level security;
+
+   create policy "own tasks"     on public.tasks     for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+   create policy "own deadlines" on public.deadlines for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+   create policy "own snapshots" on public.snapshots for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+   ```
+
+3. **Set redirect URLs** under **Authentication → URL Configuration**:
+   - **Site URL**: your hosting URL (e.g. `https://ashuftw.github.io/ground-control/`)
+   - **Redirect URLs**: add `https://<your-host>/**` and `http://localhost:8000/**`
+
+4. **Wire up the keys** — from **Project Settings → API**, copy the **Project URL** and the **anon / public** key into the constants near the top of `index.html`'s script:
+
+   ```javascript
+   const SUPABASE_URL = 'https://<project-ref>.supabase.co';
+   const SUPABASE_ANON_KEY = 'eyJhbGci...';
+   ```
+
+> **Email limits:** Supabase's built-in email sender is rate-limited (a few magic links per hour) and intended for testing. For more volume, configure a custom SMTP provider (e.g. Resend) under **Authentication → Emails**.
+
+---
+
+## Deploy
+
+The app is a static file, so any static host works. This repo deploys via **GitHub Pages** (Settings → Pages → Deploy from branch → `main` / root), auto-publishing on every push to `main`. Remember to add the resulting URL to the Supabase Redirect URLs.
