@@ -304,6 +304,48 @@
     align-items: center;
   }
 
+  /* Snapshots */
+  .snapshots {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .snapshot {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1.1rem;
+    box-shadow: var(--shadow);
+    transition: border-color 0.2s;
+  }
+
+  .snapshot:hover { border-color: var(--border-hover); }
+
+  .snapshot .body { flex: 1; min-width: 0; }
+
+  .snapshot .body .t {
+    font-weight: 600;
+    font-size: 0.92rem;
+    letter-spacing: -0.01em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .snapshot .body .d {
+    font-size: 0.75rem;
+    color: var(--text-sec);
+    margin-top: 0.1rem;
+  }
+
+  .snapshot .actions { display: flex; gap: 0.4rem; flex-shrink: 0; }
+
+  .snapshot .actions .btn { padding: 0.35rem 0.7rem; font-size: 0.75rem; }
+
   /* Deadlines Grid */
   .deadlines {
     display: flex;
@@ -1080,6 +1122,13 @@
   </div>
   <div class="hiwis" id="hiwis"></div>
 
+  <!-- Snapshots Section -->
+  <div class="section-title">
+    <span>Snapshots</span>
+    <button class="btn" id="add-snapshot-btn" onclick="openSnapshotModal()" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">📸 Save snapshot</button>
+  </div>
+  <div class="snapshots" id="snapshots"></div>
+
   <footer>
     Study Dashboard · Your tasks and deadlines sync securely to your private account.
   </footer>
@@ -1113,6 +1162,29 @@
     <div class="modal-footer">
       <button class="btn" onclick="closeDeadlineModal()">Cancel</button>
       <button class="btn btn-primary" id="deadline-submit-btn" onclick="submitDeadline()">Add Deadline</button>
+    </div>
+  </div>
+</div>
+
+<!-- Save Snapshot Modal -->
+<div class="modal-overlay" id="modal-snapshot">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Save Snapshot</h3>
+      <button class="modal-close" onclick="closeSnapshotModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="snapshot-label">Name this snapshot</label>
+        <input type="text" id="snapshot-label" placeholder="e.g. Before exam week" onkeydown="if(event.key==='Enter')submitSnapshot()" />
+      </div>
+      <div class="instruction-box">
+        Saves the current state of all your tasks and deadlines. You can restore it later to roll everything back to this exact point.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeSnapshotModal()">Cancel</button>
+      <button class="btn btn-primary" id="snapshot-submit-btn" onclick="submitSnapshot()">Save Snapshot</button>
     </div>
   </div>
 </div>
@@ -1582,6 +1654,200 @@ async function deleteDeadline(id) {
   showToast('Deadline deleted!', 'success');
 }
 
+/* Snapshots — save/restore the full state of tasks + deadlines */
+const SNAPSHOTS_KEY = 'cached_snapshots';
+const MAX_SNAPSHOTS = 30;
+let snapshots = [];
+
+function buildSnapshotData() {
+  // Deep copy so later edits don't mutate the stored snapshot
+  return {
+    tasks: JSON.parse(JSON.stringify(tasks)),
+    deadlines: JSON.parse(JSON.stringify(deadlines))
+  };
+}
+
+function openSnapshotModal() {
+  document.getElementById('snapshot-label').value =
+    new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  document.getElementById('modal-snapshot').classList.add('open');
+  document.getElementById('snapshot-label').focus();
+  document.getElementById('snapshot-label').select();
+}
+
+function closeSnapshotModal() {
+  document.getElementById('modal-snapshot').classList.remove('open');
+}
+
+function submitSnapshot() {
+  const label = document.getElementById('snapshot-label').value.trim();
+  if (!label) { showToast('Please name the snapshot.', 'warning'); return; }
+  closeSnapshotModal();
+  saveSnapshot(label);
+}
+
+// Create a snapshot of the current state. Returns a promise.
+async function saveSnapshot(label, silent) {
+  const data = buildSnapshotData();
+
+  if (currentUser) {
+    try {
+      const { error } = await sbClient
+        .from('snapshots')
+        .insert([{ user_id: currentUser.id, label, data }]);
+      if (error) throw error;
+      await loadSnapshots();
+      await pruneSnapshots();
+    } catch (e) {
+      console.error(e);
+      showToast('Failed to save snapshot to cloud.', 'warning');
+      return;
+    }
+  } else {
+    snapshots.unshift({ id: 'l' + Math.random().toString(36).slice(2, 9), label, data, created_at: new Date().toISOString() });
+    snapshots = snapshots.slice(0, MAX_SNAPSHOTS);
+    safeSetItem(SNAPSHOTS_KEY, JSON.stringify(snapshots));
+    renderSnapshots();
+  }
+
+  if (!silent) showToast('Snapshot saved!', 'success');
+}
+
+// Keep only the most recent MAX_SNAPSHOTS rows in the cloud.
+async function pruneSnapshots() {
+  if (!currentUser || snapshots.length <= MAX_SNAPSHOTS) return;
+  const stale = snapshots.slice(MAX_SNAPSHOTS);
+  try {
+    await sbClient.from('snapshots').delete().in('id', stale.map(s => s.id));
+    await loadSnapshots();
+  } catch (e) { console.error(e); }
+}
+
+async function loadSnapshots() {
+  if (currentUser) {
+    try {
+      const { data, error } = await sbClient
+        .from('snapshots')
+        .select('id, label, created_at')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      snapshots = data || [];
+    } catch (e) {
+      console.error(e);
+      snapshots = [];
+    }
+  } else {
+    try {
+      const cached = safeGetItem(SNAPSHOTS_KEY);
+      snapshots = cached ? JSON.parse(cached) : [];
+    } catch (e) { snapshots = []; }
+  }
+  renderSnapshots();
+}
+
+function renderSnapshots() {
+  const el = document.getElementById('snapshots');
+  if (!el) return;
+  if (!snapshots.length) {
+    el.innerHTML = '<div class="snapshot"><div class="body"><div class="empty">No snapshots yet. Click "Save snapshot" to capture your current tasks and deadlines.</div></div></div>';
+    return;
+  }
+  el.innerHTML = snapshots.map(s => {
+    const when = new Date(s.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    return `<div class="snapshot">
+      <div class="body"><div class="t">${esc(s.label)}</div><div class="d">${when}</div></div>
+      <div class="actions">
+        <button class="btn" onclick="restoreSnapshot('${s.id}')">Restore</button>
+        <button class="btn btn-logout" onclick="deleteSnapshot('${s.id}')" title="Delete snapshot">${ICON_X}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function getSnapshotData(id) {
+  if (currentUser) {
+    const { data, error } = await sbClient.from('snapshots').select('data').eq('id', id).single();
+    if (error) throw error;
+    return data.data;
+  }
+  const s = snapshots.find(x => x.id === id);
+  return s ? s.data : null;
+}
+
+async function restoreSnapshot(id) {
+  if (!confirm('Restore this snapshot? Your current tasks and deadlines will be replaced. (A backup of your current state is saved first, so you can undo.)')) return;
+
+  let data;
+  try {
+    data = await getSnapshotData(id);
+  } catch (e) {
+    console.error(e);
+    showToast('Could not load that snapshot.', 'danger');
+    return;
+  }
+  if (!data) { showToast('Snapshot not found.', 'danger'); return; }
+
+  // Safety net: back up the current state before overwriting.
+  const stamp = new Date().toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  await saveSnapshot('Auto-backup before restore · ' + stamp, true);
+
+  // Apply the snapshot to the in-memory state and screen.
+  tasks = JSON.parse(JSON.stringify(data.tasks || {}));
+  deadlines = JSON.parse(JSON.stringify(data.deadlines || []));
+  renderAll();
+
+  if (currentUser) {
+    try {
+      showSyncState('syncing', 'Restoring...');
+      // Replace the cloud copy: wipe this user's rows, then re-insert from the snapshot.
+      await sbClient.from('tasks').delete().eq('user_id', currentUser.id);
+      await sbClient.from('deadlines').delete().eq('user_id', currentUser.id);
+
+      const taskRows = [];
+      Object.keys(tasks).forEach(hiwiId => {
+        Object.keys(tasks[hiwiId]).forEach(hzId => {
+          (tasks[hiwiId][hzId] || []).forEach(t => {
+            taskRows.push({ user_id: currentUser.id, hiwi_id: hiwiId, horizon_id: hzId, text: t.text, done: !!t.done });
+          });
+        });
+      });
+      const deadlineRows = deadlines.map(d => ({ user_id: currentUser.id, title: d.title, date: d.date, type: d.type }));
+
+      if (taskRows.length) await sbClient.from('tasks').insert(taskRows);
+      if (deadlineRows.length) await sbClient.from('deadlines').insert(deadlineRows);
+
+      // Re-fetch so local ids match the new DB rows.
+      await fetchTasksFromSupabase();
+      await fetchDeadlinesFromSupabase();
+      showSyncState('live', 'Cloud Synced');
+    } catch (e) {
+      console.error(e);
+      showSyncState('error', 'Sync error');
+      showToast('Restore saved locally but cloud sync failed.', 'warning');
+    }
+  } else {
+    saveTasksLocally();
+    safeSetItem('cached_deadlines', JSON.stringify(deadlines));
+  }
+
+  showToast('Snapshot restored!', 'success');
+}
+
+async function deleteSnapshot(id) {
+  if (!confirm('Delete this snapshot? This cannot be undone.')) return;
+  if (currentUser) {
+    try {
+      await sbClient.from('snapshots').delete().eq('id', id);
+    } catch (e) { console.error(e); }
+    await loadSnapshots();
+  } else {
+    snapshots = snapshots.filter(s => s.id !== id);
+    safeSetItem(SNAPSHOTS_KEY, JSON.stringify(snapshots));
+    renderSnapshots();
+  }
+  showToast('Snapshot deleted!', 'success');
+}
+
 /* Supabase Auth Flows (passwordless email magic link) */
 async function sendMagicLink() {
   if (!sbClient) {
@@ -1639,9 +1905,11 @@ async function handleLogout() {
   
   safeRemoveItem('cached_deadlines');
   safeRemoveItem(STORAGE_KEY);
+  safeRemoveItem(SNAPSHOTS_KEY);
   tasks = JSON.parse(JSON.stringify(defaultTasks));
   deadlines = [];
-  
+  snapshots = [];
+
   renderAll();
   showLandingPage();
   showToast('Logged out successfully!', 'success');
@@ -1660,6 +1928,7 @@ async function onLoginSuccess() {
   try {
     await fetchTasksFromSupabase();
     await fetchDeadlinesFromSupabase();
+    await loadSnapshots();
     showSyncState('live', 'Cloud Synced');
   } catch(e) {
     console.error(e);
@@ -1688,6 +1957,7 @@ function enterLocalMode() {
   document.getElementById('sync').style.display = 'flex';
   showSyncState('local', 'Local mode');
   document.getElementById('connect-banner').style.display = 'flex';
+  loadSnapshots();
 }
 
 function showLandingPage() {
