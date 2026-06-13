@@ -1,8 +1,8 @@
-# Study & Research Dashboard
+# Ground Control
 
 A lightweight, private productivity dashboard for managing university tasks, deadlines, and exams — with passwordless sign-in and cloud sync across devices.
 
-**Live:** https://ashuftw.github.io/ground-control/
+**Live:** https://gc.ashuftw.com
 
 It's a single self-contained `index.html` file backed by [Supabase](https://supabase.com) (free tier). Each user signs in with an email **magic link** and gets their own private data, isolated by row-level security. No passwords, no per-user setup — open the page, enter your email, click the link, done.
 
@@ -99,8 +99,8 @@ The app points at a shared Supabase project. To stand up your own:
    ```
 
 3. **Set redirect URLs** under **Authentication → URL Configuration**:
-   - **Site URL**: your hosting URL (e.g. `https://ashuftw.github.io/ground-control/`)
-   - **Redirect URLs**: add `https://<your-host>/**` and `http://localhost:8000/**`
+   - **Site URL**: your hosting URL (e.g. `https://gc.ashuftw.com`)
+   - **Redirect URLs**: add `https://gc.ashuftw.com/**` and `http://localhost:8000/**`
 
 4. **Wire up the keys** — from **Project Settings → API**, copy the **Project URL** and the **anon / public** key into the constants near the top of `index.html`'s script:
 
@@ -115,4 +115,10 @@ The app points at a shared Supabase project. To stand up your own:
 
 ## Deploy
 
-The app is a static file, so any static host works. This repo deploys via **GitHub Pages** (Settings → Pages → Deploy from branch → `main` / root), auto-publishing on every push to `main`. Remember to add the resulting URL to the Supabase Redirect URLs.
+The app is a static file, so any static host works. This repo deploys via **GitHub Pages** (Settings → Pages → Deploy from branch → `main` / root), auto-publishing on every push to `main`.
+
+It's served at the custom domain **gc.ashuftw.com** via the `CNAME` file in the repo root. To wire up the domain:
+
+1. In your DNS provider, add a `CNAME` record: `gc` → `ashuftw.github.io`.
+2. In **Settings → Pages → Custom domain**, confirm `gc.ashuftw.com` and enable **Enforce HTTPS** once the certificate is issued.
+3. Add `https://gc.ashuftw.com/**` to the Supabase Redirect URLs (and set it as the Site URL).
