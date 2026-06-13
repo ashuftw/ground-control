@@ -11,32 +11,32 @@
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   
-  /* Gruvbox dark palette (https://github.com/morhetz/gruvbox) */
+  /* Warm sepia dark palette — matched to gc.ashuftw.com */
   :root {
-    --bg: #1d2021;          /* bg0_hard */
-    --bg-card: #282828;     /* bg0 */
-    --bg-hover: #3c3836;    /* bg1 */
-    --border: #3c3836;      /* bg1 */
-    --border-hover: #504945;/* bg2 */
-    --text: #ebdbb2;        /* fg1 */
-    --text-sec: #d5c4a1;    /* fg2 */
-    --text-muted: #928374;  /* gray */
+    --bg: #1e1916;          /* very dark brown */
+    --bg-card: #2c2520;     /* secondary surface */
+    --bg-hover: #342e29;    /* slightly lighter */
+    --border: #3a332d;
+    --border-hover: #5a4d40;
+    --text: #f0e6d9;        /* light beige */
+    --text-sec: #b3a396;    /* muted brown */
+    --text-muted: #8c7a6b;  /* light brown */
 
-    --primary: #d65d0e;     /* orange (neutral) */
-    --primary-light: #42342a;
-    --primary-text: #fe8019;/* orange (bright) */
+    --primary: #e0d6c9;     /* beige accent (matches site's inverted button) */
+    --primary-light: #2c2520;
+    --primary-text: #d8c3a5;
 
-    --success: #98971a;     /* green (neutral) */
-    --success-light: #2f3a24;
-    --success-text: #b8bb26;/* green (bright) */
+    --success: #90ac66;     /* muted green */
+    --success-light: #25291c;
+    --success-text: #a8c47e;
 
-    --warning: #d79921;     /* yellow (neutral) */
-    --warning-light: #423a27;
-    --warning-text: #fabd2f;/* yellow (bright) */
+    --warning: #ebb16c;     /* muted orange */
+    --warning-light: #2e271b;
+    --warning-text: #ebb16c;
 
-    --danger: #cc241d;      /* red (neutral) */
-    --danger-light: #422d2a;
-    --danger-text: #fb4934; /* red (bright) */
+    --danger: #eb6c6c;      /* muted red */
+    --danger-light: #2e1f1c;
+    --danger-text: #eb866c;
 
     --radius-sm: 8px;
     --radius-md: 12px;
@@ -47,7 +47,7 @@
     --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.4), 0 4px 6px -2px rgba(0,0,0,0.3);
   }
 
-  ::selection { background: var(--primary); color: #1d2021; }
+  ::selection { background: var(--primary); color: #1e1916; }
 
   body {
     font-family: var(--font-body);
@@ -79,7 +79,7 @@
     font-size: 1.8rem;
     font-weight: 700;
     letter-spacing: -0.03em;
-    background: linear-gradient(135deg, #fe8019 0%, #fabd2f 100%);
+    background: linear-gradient(135deg, #e0d6c9 0%, #b3a396 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
@@ -120,7 +120,7 @@
 
   .banner-btn {
     background: var(--primary);
-    color: #fff;
+    color: #1e1916;
     border: none;
     border-radius: var(--radius-sm);
     padding: 0.4rem 0.8rem;
@@ -192,13 +192,13 @@
 
   .btn-primary {
     background: var(--primary);
-    color: #fff;
+    color: #1e1916;
     border-color: var(--primary);
   }
 
   .btn-primary:hover {
     background: var(--primary);
-    color: #fff;
+    color: #1e1916;
     filter: brightness(1.1);
   }
   
@@ -491,7 +491,7 @@
   .task .check.done {
     background: var(--success);
     border-color: var(--success);
-    color: #fff;
+    color: #1e1916;
   }
   
   .task .check.done svg {
@@ -637,7 +637,7 @@
   
   .add-form .confirm {
     background: var(--success);
-    color: #fff;
+    color: #1e1916;
     border-color: var(--success);
   }
 
@@ -877,7 +877,7 @@
     left: 0;
     width: 100%;
     height: 4px;
-    background: linear-gradient(135deg, #fe8019 0%, #fabd2f 100%);
+    background: linear-gradient(135deg, #e0d6c9 0%, #b3a396 100%);
   }
 
   .login-logo {
@@ -903,7 +903,7 @@
     font-weight: 700;
     letter-spacing: -0.03em;
     margin-bottom: 0.75rem;
-    background: linear-gradient(135deg, #fe8019 0%, #fabd2f 100%);
+    background: linear-gradient(135deg, #e0d6c9 0%, #b3a396 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
@@ -945,7 +945,7 @@
     justify-content: center;
     gap: 0.5rem;
     background: var(--primary);
-    color: #fff;
+    color: #1e1916;
     border: none;
     border-radius: var(--radius-md);
     padding: 0.75rem 1.5rem;
