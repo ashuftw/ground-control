@@ -1109,8 +1109,8 @@
 <!-- Toast Container -->
 <div class="toast-container" id="toast-container"></div>
 
-<!-- Supabase Client SDK -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Supabase Client SDK (async so a slow/blocked CDN can never freeze the page) -->
+<script id="sb-cdn" async src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 window.onerror = function(message, source, lineno, colno, error) {
   document.body.innerHTML = `<div style="color: #ef4444; background: #fee2e2; border: 1px solid #fca5a5; padding: 2rem; margin: 2rem; border-radius: 8px; font-family: monospace;">
@@ -1188,7 +1188,21 @@ const SUPABASE_ANON_KEY = '';
 
 let supabaseUrl = safeGetItem('supabase_url') || SUPABASE_URL;
 let supabaseAnonKey = safeGetItem('supabase_anon_key') || SUPABASE_ANON_KEY;
-const supabase = (supabaseUrl && supabaseAnonKey) ? Supabase.createClient(supabaseUrl, supabaseAnonKey) : null;
+
+// The CDN exposes the library as the lowercase global `window.supabase`.
+// Created lazily once the (async) SDK script has loaded — see boot() below.
+let sbClient = null;
+function initSupabaseClient() {
+  try {
+    const lib = window.supabase;
+    if (lib && lib.createClient && supabaseUrl && supabaseAnonKey) {
+      sbClient = lib.createClient(supabaseUrl, supabaseAnonKey);
+    }
+  } catch (e) {
+    console.error('Failed to init Supabase client:', e);
+    sbClient = null;
+  }
+}
 
 // State variables
 let tasks = JSON.parse(JSON.stringify(defaultTasks));
@@ -1246,11 +1260,11 @@ async function loadInitialData() {
     }
   }, 2500);
 
-  if (supabase) {
+  if (sbClient) {
     let authChecked = false;
     
     // Get initial session immediately
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    sbClient.auth.getSession().then(({ data: { session } }) => {
       if (authChecked) return;
       authChecked = true;
       if (session) {
@@ -1269,7 +1283,7 @@ async function loadInitialData() {
     });
 
     // Listen for subsequent auth changes
-    supabase.auth.onAuthStateChange(async (event, session) => {
+    sbClient.auth.onAuthStateChange(async (event, session) => {
       if (event === 'INITIAL_SESSION') return;
       authChecked = true;
       if (session) {
@@ -1399,7 +1413,7 @@ async function addTask(h){
   
   if (currentUser) {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await sbClient
         .from('tasks')
         .insert([{
           user_id: currentUser.id,
@@ -1429,7 +1443,7 @@ async function toggleTask(h, hz, id){
   
   if (currentUser) {
     try {
-      await supabase
+      await sbClient
         .from('tasks')
         .update({ done: t.done })
         .eq('id', id);
@@ -1447,7 +1461,7 @@ async function delTask(h, hz, id){
   
   if (currentUser) {
     try {
-      await supabase
+      await sbClient
         .from('tasks')
         .delete()
         .eq('id', id);
@@ -1540,7 +1554,7 @@ async function submitDeadline() {
   
   if (currentUser) {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await sbClient
         .from('deadlines')
         .insert([{
           user_id: currentUser.id,
@@ -1568,7 +1582,7 @@ async function deleteDeadline(id) {
   
   if (currentUser) {
     try {
-      await supabase
+      await sbClient
         .from('deadlines')
         .delete()
         .eq('id', id);
@@ -1583,13 +1597,13 @@ async function deleteDeadline(id) {
 
 /* Supabase Auth Flows */
 async function handleAuthClick() {
-  if (!supabase) {
+  if (!sbClient) {
     showToast('Please configure Supabase settings first!', 'warning');
     openSettings();
     return;
   }
   
-  const { data, error } = await supabase.auth.signInWithOAuth({
+  const { data, error } = await sbClient.auth.signInWithOAuth({
     provider: 'google',
     options: {
       redirectTo: window.location.origin + window.location.pathname
@@ -1601,8 +1615,8 @@ async function handleAuthClick() {
 }
 
 async function handleLogout() {
-  if (supabase) {
-    await supabase.auth.signOut();
+  if (sbClient) {
+    await sbClient.auth.signOut();
   }
   
   safeRemoveItem('cached_deadlines');
@@ -1680,7 +1694,7 @@ function displayUserProfile() {
 /* Supabase DB Operations */
 async function fetchTasksFromSupabase() {
   if (!currentUser) return;
-  const { data, error } = await supabase
+  const { data, error } = await sbClient
     .from('tasks')
     .select('*');
   
@@ -1702,7 +1716,7 @@ async function fetchTasksFromSupabase() {
 
 async function fetchDeadlinesFromSupabase() {
   if (!currentUser) return;
-  const { data, error } = await supabase
+  const { data, error } = await sbClient
     .from('deadlines')
     .select('*')
     .order('date', { ascending: true });
@@ -1718,8 +1732,32 @@ async function fetchDeadlinesFromSupabase() {
   }
 }
 
-// Initial Load
-loadInitialData();
+// Initial Load — bootstrap defensively so the page always renders something,
+// even if the Supabase SDK is slow, blocked, or fails to load entirely.
+function boot() {
+  initSupabaseClient();
+  loadInitialData();
+}
+
+if (supabaseUrl && supabaseAnonKey) {
+  // Credentials configured: we want the real SDK, but never wait forever for it.
+  if (window.supabase) {
+    boot();
+  } else {
+    let booted = false;
+    const doBoot = () => { if (!booted) { booted = true; boot(); } };
+    const sbScript = document.getElementById('sb-cdn');
+    if (sbScript) {
+      sbScript.addEventListener('load', doBoot);
+      sbScript.addEventListener('error', doBoot); // SDK failed -> boot in local mode
+    }
+    // Fallback: if the SDK never fires load/error (hung request), boot anyway.
+    setTimeout(doBoot, 3000);
+  }
+} else {
+  // No credentials: no SDK needed, render immediately in local mode.
+  boot();
+}
 </script>
 </body>
 </html>
