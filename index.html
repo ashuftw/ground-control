@@ -913,6 +913,49 @@
     }
   }
 
+  .login-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .login-input:focus {
+    border-color: var(--primary);
+  }
+
+  .btn-login {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1.5rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--font-body);
+    transition: filter 0.2s, opacity 0.2s;
+  }
+
+  .btn-login:hover {
+    filter: brightness(1.1);
+  }
+
+  .btn-login:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
   .btn-offline {
     background: transparent;
     color: var(--text-sec);
@@ -971,15 +1014,20 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
     </div>
     <h2 class="login-title">Study Dashboard</h2>
-    <p class="login-desc">Manage university tasks, track deadlines, and schedule focus blocks. Securely syncs with your Google Account.</p>
-    <div class="login-buttons">
-      <button class="btn-google" onclick="handleAuthClick()">
-        <svg style="width:18px;height:18px;" viewBox="0 0 24 24"><path fill="#EA4335" d="M5.266 9.765A7.077 7.077 0 0 1 12 4.909c1.69 0 3.218.6 4.418 1.582l3.51-3.51C17.842 1.05 15.114 0 12 0 7.354 0 3.393 2.665 1.488 6.559l3.778 3.206z"/><path fill="#4285F4" d="M23.49 12.275c0-.825-.074-1.62-.21-2.385H12v4.51h6.44c-.277 1.463-1.1 2.703-2.337 3.535l3.63 2.818c2.128-1.96 3.757-4.84 3.757-8.478z"/><path fill="#FBBC05" d="M5.266 14.235A7.082 7.082 0 0 1 4.91 12c0-.79.13-1.554.356-2.265L1.488 6.53A11.948 11.948 0 0 0 0 12c0 2.015.5 3.914 1.39 5.597l3.876-3.362z"/><path fill="#34A853" d="M12 24c3.24 0 5.957-1.075 7.942-2.912l-3.63-2.818c-1.006.674-2.295 1.075-4.312 1.075-3.34 0-6.177-2.253-7.186-5.285L.94 17.425C2.857 21.328 6.89 24 12 24z"/></svg>
-        Sign In with Google
-      </button>
+    <p class="login-desc">Manage university tasks, track deadlines, and schedule focus blocks. Sign in with your email to sync securely across devices.</p>
+    <!-- Email magic-link form -->
+    <div class="login-buttons" id="login-form">
+      <input type="email" id="login-email" class="login-input" placeholder="you@example.com" autocomplete="email"
+             onkeydown="if(event.key==='Enter')sendMagicLink()" />
+      <button class="btn-login" onclick="sendMagicLink()" id="magic-btn">Send Magic Link</button>
       <button class="btn btn-offline" onclick="enterLocalMode()">
         Use Offline (Local Mode)
       </button>
+    </div>
+    <!-- Shown after the link is sent -->
+    <div class="login-buttons" id="magic-sent" style="display: none;">
+      <p class="login-desc" style="margin-bottom: 0;">📬 Check your inbox! We sent a sign-in link to <strong id="magic-email"></strong>. Click it to log in — you can close this tab.</p>
+      <button class="btn btn-offline" onclick="resetLoginForm()">Use a different email</button>
     </div>
   </div>
 </div>
@@ -993,7 +1041,7 @@
       <svg class="icon" viewBox="0 0 24 24"><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10zM2 12h20M20.5 5A17 17 0 0 0 18 12a17 17 0 0 0 2.5 7M3.5 5A17 17 0 0 1 6 12a17 17 0 0 1-2.5 7"/></svg>
       <span>Sync tasks and deadlines securely in the cloud across your devices</span>
     </div>
-    <button class="banner-btn" onclick="handleAuthClick()">Connect Google Account</button>
+    <button class="banner-btn" onclick="showLandingPage()">Sign in to sync</button>
   </div>
 
   <header>
@@ -1013,9 +1061,6 @@
         <span class="dot"></span>
         <span id="sync-txt">Local mode</span>
       </div>
-      <button class="btn" onclick="openSettings()" aria-label="Settings">
-        <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      </button>
     </div>
   </header>
 
@@ -1036,42 +1081,8 @@
   <div class="hiwis" id="hiwis"></div>
 
   <footer>
-    Study Dashboard · Cloud data securely saved inside your private Google Drive App Folder.
+    Study Dashboard · Your tasks and deadlines sync securely to your private account.
   </footer>
-</div>
-
-<!-- Settings Modal -->
-<div class="modal-overlay" id="modal-settings">
-  <div class="modal">
-    <div class="modal-header">
-      <h3>Settings</h3>
-      <button class="modal-close" onclick="closeSettings()">&times;</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label for="settings-supabase-url">Supabase Project URL</label>
-        <input type="text" id="settings-supabase-url" placeholder="https://your-project.supabase.co" />
-      </div>
-      <div class="form-group">
-        <label for="settings-supabase-key">Supabase Anon Key</label>
-        <input type="password" id="settings-supabase-key" placeholder="eyJhbGciOi..." />
-      </div>
-      
-      <div class="instruction-box">
-        <strong>How to set up your database:</strong>
-        <ol>
-          <li>Create a free account at <a href="https://supabase.com" target="_blank" rel="noopener">supabase.com</a> and create a project.</li>
-          <li>Go to **Authentication** &rarr; **Providers** &rarr; **Google** and enable it. (You will need to paste Google Client ID/Secret there).</li>
-          <li>Go to **Project Settings** &rarr; **API** and copy your Project URL and Anon key. Paste them here.</li>
-          <li>Run the database SQL setup script in your Supabase SQL Editor to create the tables.</li>
-        </ol>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn" onclick="closeSettings()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveSettings()">Save & Connect</button>
-    </div>
-  </div>
 </div>
 
 <!-- Add Deadline Modal -->
@@ -1182,12 +1193,12 @@ const defaultTasks = {
   },
 };
 
-// CONFIGURATION: Set these to your Supabase credentials!
-const SUPABASE_URL = ''; 
-const SUPABASE_ANON_KEY = '';
+// CONFIGURATION: shared Supabase project (anon key is public by design — RLS protects data)
+const SUPABASE_URL = 'https://emwokiqmrcfmkfhahnlr.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtd29raXFtcmNmbWtmaGFobmxyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNDQwMzYsImV4cCI6MjA5NjkyMDAzNn0.rBGRNAwceZxeWMrMDisiZXTig61fuCiGz-R0IJ2I3uQ';
 
-let supabaseUrl = safeGetItem('supabase_url') || SUPABASE_URL;
-let supabaseAnonKey = safeGetItem('supabase_anon_key') || SUPABASE_ANON_KEY;
+let supabaseUrl = SUPABASE_URL;
+let supabaseAnonKey = SUPABASE_ANON_KEY;
 
 // The CDN exposes the library as the lowercase global `window.supabase`.
 // Created lazily once the (async) SDK script has loaded — see boot() below.
@@ -1501,30 +1512,6 @@ function showSyncState(cls, txt) {
 }
 
 /* Modals Management */
-function openSettings() {
-  document.getElementById('settings-supabase-url').value = safeGetItem('supabase_url') || SUPABASE_URL;
-  document.getElementById('settings-supabase-key').value = safeGetItem('supabase_anon_key') || SUPABASE_ANON_KEY;
-  document.getElementById('modal-settings').classList.add('open');
-}
-
-function closeSettings() {
-  document.getElementById('modal-settings').classList.remove('open');
-}
-
-function saveSettings() {
-  const url = document.getElementById('settings-supabase-url').value.trim();
-  const key = document.getElementById('settings-supabase-key').value.trim();
-  
-  safeSetItem('supabase_url', url);
-  safeSetItem('supabase_anon_key', key);
-  
-  closeSettings();
-  showToast('Settings saved! Reloading...', 'success');
-  setTimeout(() => {
-    window.location.reload();
-  }, 1000);
-}
-
 // Deadline Modal
 function openAddDeadlineModal() {
   document.getElementById('deadline-title').value = '';
@@ -1595,23 +1582,54 @@ async function deleteDeadline(id) {
   showToast('Deadline deleted!', 'success');
 }
 
-/* Supabase Auth Flows */
-async function handleAuthClick() {
+/* Supabase Auth Flows (passwordless email magic link) */
+async function sendMagicLink() {
   if (!sbClient) {
-    showToast('Please configure Supabase settings first!', 'warning');
-    openSettings();
+    showToast('Cloud sync is not configured yet.', 'warning');
     return;
   }
-  
-  const { data, error } = await sbClient.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: window.location.origin + window.location.pathname
-    }
-  });
-  if (error) {
-    showToast('Google login failed: ' + error.message, 'danger');
+
+  const emailEl = document.getElementById('login-email');
+  const email = emailEl.value.trim();
+  if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+    showToast('Please enter a valid email address.', 'warning');
+    emailEl.focus();
+    return;
   }
+
+  const btn = document.getElementById('magic-btn');
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+
+  try {
+    const { error } = await sbClient.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: window.location.origin + window.location.pathname
+      }
+    });
+    if (error) {
+      showToast('Could not send link: ' + error.message, 'danger');
+      return;
+    }
+    // Show the "check your inbox" confirmation state
+    document.getElementById('magic-email').textContent = email;
+    document.getElementById('login-form').style.display = 'none';
+    document.getElementById('magic-sent').style.display = 'flex';
+  } catch (e) {
+    console.error(e);
+    showToast('Could not send link. Please try again.', 'danger');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Send Magic Link';
+  }
+}
+
+function resetLoginForm() {
+  document.getElementById('magic-sent').style.display = 'none';
+  document.getElementById('login-form').style.display = 'flex';
+  document.getElementById('login-email').value = '';
+  document.getElementById('login-email').focus();
 }
 
 async function handleLogout() {
@@ -1684,8 +1702,16 @@ function displayUserProfile() {
   const nameEl = document.getElementById('user-name');
   
   if (userWidget && avatarEl && nameEl) {
-    const meta = currentUser.user_metadata;
-    avatarEl.src = meta.avatar_url || meta.picture || '';
+    const meta = currentUser.user_metadata || {};
+    const avatar = meta.avatar_url || meta.picture || '';
+    // Email magic-link sign-ins have no avatar — hide the broken <img> instead.
+    if (avatar) {
+      avatarEl.src = avatar;
+      avatarEl.style.display = '';
+    } else {
+      avatarEl.removeAttribute('src');
+      avatarEl.style.display = 'none';
+    }
     nameEl.textContent = meta.full_name || meta.name || currentUser.email || 'User';
     userWidget.style.display = 'flex';
   }
