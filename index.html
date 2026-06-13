@@ -13,10 +13,10 @@
   
   /* Warm sepia dark palette — matched to gc.ashuftw.com */
   :root {
-    --bg: #1e1916;          /* very dark brown */
-    --bg-card: #2c2520;     /* secondary surface */
-    --bg-hover: #342e29;    /* slightly lighter */
-    --border: #3a332d;
+    --bg: #0f0d0b;          /* near-black brown */
+    --bg-card: #1e1916;     /* card surface */
+    --bg-hover: #2c2520;    /* hover / subtle */
+    --border: #342e29;
     --border-hover: #5a4d40;
     --text: #f0e6d9;        /* light beige */
     --text-sec: #b3a396;    /* muted brown */
@@ -385,17 +385,17 @@
   
   .deadline .bar {
     margin-top: 0.5rem;
-    height: 4px;
+    height: 6px;
     border-radius: 999px;
-    background: var(--bg-hover);
+    background: rgba(0, 0, 0, 0.45);
     overflow: hidden;
   }
-  
+
   .deadline .bar span {
     display: block;
     height: 100%;
     border-radius: 999px;
-    background: var(--text-muted);
+    background: var(--text);
     transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
